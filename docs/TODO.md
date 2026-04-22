@@ -37,8 +37,8 @@ Lista de tareas paso a paso. Marca cada casilla al completarla. Cuando aparezca 
 
 - [x] Añadir plugin `com.google.gms.google-services` en el `build.gradle.kts` raíz y aplicarlo en `:app`
 - [x] Añadir Firebase BoM + `firebase-auth-ktx` + `firebase-firestore-ktx` en `libs.versions.toml` y `app/build.gradle.kts`
-- [ ] Crear `GarageBaseApplication : Application`, inicializar Firebase y declararla en `AndroidManifest.xml`
-- [ ] Instalar Firebase CLI y Firebase Local Emulator Suite (Firestore + Auth)
+- [x] Crear `GarageBaseApplication : Application`, inicializar Firebase y declararla en `AndroidManifest.xml`
+- [x] Instalar Firebase CLI y Firebase Local Emulator Suite (Firestore + Auth)
 
 ### 3.3 Modelos y repositorios
 
