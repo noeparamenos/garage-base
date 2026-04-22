@@ -18,7 +18,7 @@ Hay dos roles en la aplicación:
 - **Build:** Gradle con Kotlin DSL
 - **Package:** `com.garagebase`
 - **minSdk:** 27 (Android 8.1) · **targetSdk / compileSdk:** 36
-- **Persistencia:** por decidir (Firebase Firestore + Auth es el candidato principal)
+- **Persistencia:** Firebase (Cloud Firestore + Auth)
 
 ## Requisitos
 
@@ -58,25 +58,29 @@ GarageBase/
 ├── build.gradle.kts       ← configuración raíz del proyecto
 ├── settings.gradle.kts
 ├── gradle/                ← wrapper y catálogo de versiones
-├── docs/                  ← documentación del proyecto
-│   ├── ARCHITECTURE.md    ← decisión arquitectónica y su porqué
+├── docs/
+│   ├── adr/               ← decisiones arquitectónicas (ADRs)
+│   │   ├── 0001-architecture-feature-based-clean-mvvm.md
+│   │   └── 0002-persistence-firebase.md
+│   ├── ARCHITECTURE.md    ← estado actual de la organización del código
+│   ├── data-model.md      ← modelo de dominio y diagrama ER
+│   ├── glossary.md        ← glosario de términos técnicos
 │   ├── TODO.md            ← plan de trabajo por fases
-│   └── errors.md          ← registro de incidencias y sus soluciones
+│   └── errors.md          ← registro de incidencias y soluciones
 └── README.md
 ```
 
 ## Modelo de datos
 
-El diagrama entidad-relación en Mermaid se añadirá en esta sección cuando se cierre la decisión sobre la capa de persistencia. Entidades previstas:
-
-- `Conductor` — con un flag/rol para identificar al gestor.
-- `Vehiculo` — asignado a un conductor, con `km`, `horas` y una lista de incidencias.
-- `Incidencia` — con texto y estado (`pendiente` / `revisada`).
+GarageBase modela tres entidades: `Conductor`, `Vehiculo` e `Incidencia`. Ver [`docs/data-model.md`](docs/data-model.md) para el diagrama ER completo, las relaciones y las invariantes del dominio.
 
 ## Documentación adicional
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — decisión de arquitectura (Clean Architecture + MVVM, feature-based) con el porqué de cada elección.
-- [`docs/TODO.md`](docs/TODO.md) — lista de tareas paso a paso con estado.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — estado actual de la organización del código.
+- [`docs/adr/`](docs/adr/) — decisiones arquitectónicas: por qué se eligió cada tecnología y patrón.
+- [`docs/data-model.md`](docs/data-model.md) — modelo de dominio, diagrama ER e invariantes.
+- [`docs/glossary.md`](docs/glossary.md) — glosario de términos técnicos del stack.
+- [`docs/TODO.md`](docs/TODO.md) — plan de trabajo por fases con estado.
 - [`docs/errors.md`](docs/errors.md) — incidencias técnicas encontradas y cómo se resolvieron.
 
 ## Licencia
