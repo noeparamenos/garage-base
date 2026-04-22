@@ -1,0 +1,66 @@
+# .gitattributes — política de git por tipo de archivo.
+#
+# Normaliza los finales de línea (LF vs CRLF)
+# para que colaboradores en Linux/macOS y Windows produzcan diffs limpios
+# y no se ensucie el repo con caracteres invisibles al cambiar de SO.
+#
+# Cómo funciona cada columna:
+#   <patrón>  <atributos separados por espacios>
+# Atributos usados:
+#   text       → git lo trata como archivo de texto (puede normalizar EOL).
+#   text=auto  → git detecta automáticamente si es texto o binario.
+#   eol=lf     → fuerza finales de línea LF (\n) en el repo.
+#   eol=crlf   → fuerza finales de línea CRLF (\r\n) en el repo.
+#   binary    → atajo para "sin normalización y sin diff de texto".
+
+
+# -------------------------------------------------------------------
+# Política por defecto: todo lo demás se trata como texto y se guarda
+# con LF. Es el estándar Unix y evita el clásico lío de Windows.
+# -------------------------------------------------------------------
+* text=auto eol=lf
+
+
+# -------------------------------------------------------------------
+# Scripts de Windows: DEBEN ir con CRLF o no se ejecutan en Windows.
+# gradlew.bat es el ejemplo típico (viene con el scaffold de Android).
+# -------------------------------------------------------------------
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+*.ps1   text eol=crlf
+
+
+# -------------------------------------------------------------------
+# Código y configuración del proyecto: marcarlos explícitamente como
+# texto es redundante con `text=auto`, pero documenta la intención y
+# blinda el comportamiento si alguien cambia la regla por defecto.
+# -------------------------------------------------------------------
+*.kt           text
+*.kts          text
+*.java         text
+*.xml          text
+*.md           text
+*.json         text
+*.properties   text
+*.pro          text
+.gitignore     text
+.gitattributes text
+
+
+# -------------------------------------------------------------------
+# Archivos binarios: NUNCA se deben "normalizar". Si git manipula un
+# byte intentando cambiar un salto de línea en un .png o un .jar, lo
+# corrompe. Marcarlos binarios también silencia los diffs ilegibles.
+# -------------------------------------------------------------------
+*.jar      binary
+*.aar      binary
+*.apk      binary
+*.aab      binary
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.gif      binary
+*.webp     binary
+*.ico      binary
+*.keystore binary
+*.jks      binary
