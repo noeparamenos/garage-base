@@ -25,17 +25,18 @@ Lista de tareas paso a paso. Marca cada casilla al completarla. Cuando aparezca 
 
 ### 3.1 Configuración externa (Firebase Console)
 
-- [ ] Crear proyecto en Firebase Console
-- [ ] Registrar la app Android (`com.garagebase`, SHA-1 de depuración con `./gradlew signingReport`)
-- [ ] Descargar `google-services.json` a `app/`
-- [ ] Habilitar Authentication → proveedor Email/Contraseña
-- [ ] Habilitar Cloud Firestore (modo producción, reglas cerradas por defecto)
-- [ ] Configurar alerta de presupuesto en Google Cloud
+- [x] Crear proyecto en Firebase Console
+- [x] Registrar la app Android (`com.garagebase`, SHA-1 de depuración con `./gradlew signingReport`)
+- [x] Descargar `google-services.json` a `app/`
+- [x] Habilitar Authentication → proveedor Teléfono/SMS
+- [x] Habilitar Cloud Firestore (modo producción, reglas cerradas por defecto)
+- [ ] (Diferido — requiere plan Blaze) Configurar alerta de presupuesto en Google Cloud
+- [ ] (Diferido) Activar Firebase App Check — protección extra contra uso fraudulento de la API; configurar cuando se prepare la release
 
 ### 3.2 Wiring en el proyecto Android
 
-- [ ] Añadir plugin `com.google.gms.google-services` en el `build.gradle.kts` raíz y aplicarlo en `:app`
-- [ ] Añadir Firebase BoM + `firebase-auth-ktx` + `firebase-firestore-ktx` en `libs.versions.toml` y `app/build.gradle.kts`
+- [x] Añadir plugin `com.google.gms.google-services` en el `build.gradle.kts` raíz y aplicarlo en `:app`
+- [x] Añadir Firebase BoM + `firebase-auth-ktx` + `firebase-firestore-ktx` en `libs.versions.toml` y `app/build.gradle.kts`
 - [ ] Crear `GarageBaseApplication : Application`, inicializar Firebase y declararla en `AndroidManifest.xml`
 - [ ] Instalar Firebase CLI y Firebase Local Emulator Suite (Firestore + Auth)
 
@@ -92,7 +93,14 @@ Warnings heredados del template de Android Studio — no bloquean pero conviene 
   - `compose-bom` `2024.09.00` → versión actual (revisar breaking changes por el salto grande)
 - [ ] Actualizar Gradle wrapper: `9.1.0` → `9.4.1`
 
-## 8. Pendientes / mejoras futuras
+## 8. Distribución
+
+- [ ] Crear keystore de release y guardarla fuera del repositorio
+- [ ] Registrar el SHA-1 de release en Firebase Console (Authentication → Configuración del proyecto → tu app Android → Añadir huella digital)
+- [ ] Configurar firma de release en `app/build.gradle.kts` (bloque `signingConfigs`)
+- [ ] Generar APK firmado y distribuirlo a conductores
+
+## 9. Pendientes / mejoras futuras
 
 - [ ] (Diferido) Aviso/notificación del gestor a conductores seleccionados — **no implementar hasta que se pida explícitamente**
 
@@ -105,5 +113,6 @@ Warnings heredados del template de Android Studio — no bloquean pero conviene 
 - [x] `docs/glossary.md` — glosario de términos técnicos
 - [x] `docs/adr/0001-architecture-feature-based-clean-mvvm.md`
 - [x] `docs/adr/0002-persistence-firebase.md`
+- [x] `docs/adr/0003-authentication-phone-auth.md`
 - [x] `docs/firestore-schema.md` — mapa de colecciones y denormalizaciones
 - [ ] `firestore.rules` versionado en la raíz del repo

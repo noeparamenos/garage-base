@@ -18,9 +18,9 @@ Mapa de la estructura de datos en Cloud Firestore. Describe cómo se persisten l
 
 ```
 {
-  nombre:  string
-  email:   string
-  rol:     string     // "conductor" | "gestor"
+  nombre:   string
+  telefono: string    // número en formato E.164, ej. +34612345678
+  rol:      string    // "conductor" | "gestor"
 }
 ```
 

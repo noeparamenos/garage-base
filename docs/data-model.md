@@ -13,7 +13,7 @@ erDiagram
     CONDUCTOR {
         string id PK "UID de Firebase Auth"
         string nombre
-        string email
+        string telefono
         string rol "conductor | gestor"
     }
     VEHICULO {
@@ -39,7 +39,7 @@ erDiagram
 
 ## Entidades
 
-**Conductor.** Persona que conduce un vehículo. El campo `rol` distingue entre conductor normal y `gestor` (modelado como flag, no como entidad aparte). El `id` coincide con el UID de Firebase Auth — autenticación e identidad de dominio comparten la misma clave.
+**Conductor.** Persona que conduce un vehículo. El campo `rol` distingue entre conductor normal y `gestor` (modelado como flag, no como entidad aparte). El `id` coincide con el UID de Firebase Auth — autenticación e identidad de dominio comparten la misma clave. La autenticación es por teléfono (SMS OTP); `telefono` se almacena en formato E.164.
 
 **Vehiculo.** Unidad de la flota. Mantiene `km` y `horas` acumulados junto con la fecha de `ultimaActualizacion` (el conductor actualiza los viernes). `conductorId` apunta al conductor actualmente asignado.
 
@@ -59,7 +59,7 @@ erDiagram
 - `km` y `horas` son monotonamente crecientes entre actualizaciones sucesivas — nunca disminuyen.
 - Una `Incidencia` marcada como `revisada` no vuelve a estado pendiente.
 - Solo el `gestor` puede modificar el campo `revisada`.
-- Solo el conductor actualmente asignado a un vehículo puede actualizar `km`, `horas` o añadir incidencias.
+- Solo el conductor actualmente asignado a un vehículo puede actualizar `km`, `horas` o añadir incidencias. Si el gestor desasigna al conductor mientras este tiene la app abierta, el listener de Firestore detecta el cambio y la UI debe redirigirle a la pantalla "sin vehículo asignado"; las Security Rules garantizan el rechazo en servidor independientemente de la UI.
 - Al crear una incidencia, `conductorId` y `kmAlReportar` se fijan con el estado actual del vehículo y no se modifican después.
 - Al marcar `revisada = true`, se fijan `fechaRevisada` y `kmAlRevisar` con el estado actual del vehículo y no se modifican después.
 - La actualización de `km` y `horas` se confirma explícitamente por el usuario antes de enviarse (protección contra modificaciones accidentales, especialmente del gestor que no tiene acceso físico al vehículo).

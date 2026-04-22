@@ -23,7 +23,7 @@ La app necesita:
 **Firebase: Cloud Firestore + Firebase Authentication.**
 
 - **Firestore** para persistencia: sincronización en tiempo real con `addSnapshotListener`, caché offline automática del SDK, modelo de sub-colecciones que encaja con la jerarquía `Vehiculo → Incidencias`.
-- **Firebase Auth** con email/contraseña como proveedor inicial. *Custom claims* para el rol `gestor`, verificables en las Security Rules del servidor sin roundtrip adicional.
+- **Firebase Auth** con Phone Auth (SMS OTP) como proveedor — ver ADR 0003. *Custom claims* para el rol `gestor`, verificables en las Security Rules del servidor sin roundtrip adicional.
 - El `id` del documento `Conductor` coincide con el `uid` de Firebase Auth — autenticación e identidad de dominio comparten la misma clave.
 
 ## Consecuencias
