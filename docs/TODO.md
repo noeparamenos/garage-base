@@ -42,10 +42,10 @@ Lista de tareas paso a paso. Marca cada casilla al completarla. Cuando aparezca 
 
 ### 3.3 Modelos y repositorios
 
-- [ ] Definir modelos de dominio (`Conductor`, `Vehiculo`, `Incidencia`) en `core/model/` — Kotlin puro, sin imports de Firebase
-- [ ] Definir interfaces de repositorio por feature en `domain/`
-- [ ] Implementar repositorios Firestore en `data/` con *mappers* DTO↔dominio
-- [ ] Sembrar datos de prueba (1 gestor, 2 conductores, 2 vehículos, varias incidencias) con script reproducible
+- [x] Definir modelos de dominio (`Conductor`, `Vehiculo`, `Incidencia`) en `core/model/` — Kotlin puro, sin imports de Firebase
+- [x] Definir interfaces de repositorio por feature en `domain/`
+- [x] Implementar repositorios Firestore en `data/` con *mappers* DTO↔dominio
+- [x] Sembrar datos de prueba (1 gestor, 2 conductores, 2 vehículos, varias incidencias) con script reproducible
 
 ### 3.4 Seguridad y reglas
 
