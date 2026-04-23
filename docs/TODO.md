@@ -49,9 +49,9 @@ Lista de tareas paso a paso. Marca cada casilla al completarla. Cuando aparezca 
 
 ### 3.4 Seguridad y reglas
 
-- [ ] Escribir `firestore.rules` iniciales (autenticación requerida, conductor solo edita su propio vehículo, solo gestor marca `revisada`)
-- [ ] Configurar emulador local y escribir tests de reglas con `@firebase/rules-unit-testing`
-- [ ] Asignar rol `gestor` vía *custom claims* (script inicial con Firebase Admin SDK; valorar Cloud Function cuando haga falta)
+- [x] Escribir `firestore.rules` iniciales (autenticación requerida, conductor solo edita su propio vehículo, solo gestor marca `revisada`)
+- [x] Configurar emulador local y escribir tests de reglas con `@firebase/rules-unit-testing`
+- [x] Asignar rol `gestor` vía *custom claims* (script inicial con Firebase Admin SDK; valorar Cloud Function cuando haga falta)
 
 ## 4. Autenticación y roles
 
@@ -115,4 +115,4 @@ Warnings heredados del template de Android Studio — no bloquean pero conviene 
 - [x] `docs/adr/0002-persistence-firebase.md`
 - [x] `docs/adr/0003-authentication-phone-auth.md`
 - [x] `docs/firestore-schema.md` — mapa de colecciones y denormalizaciones
-- [ ] `firestore.rules` versionado en la raíz del repo
+- [x] `firestore.rules` versionado en la raíz del repo

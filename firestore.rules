@@ -1,0 +1,154 @@
+rules_version = '2';
+
+// ─── Firestore Security Rules — GarageBase ────────────────────────────────────
+//
+// Cada operación que llega desde la app Android pasa por aquí antes de
+// ejecutarse en Firestore. Si la regla la rechaza, Firestore nunca la ve.
+//
+// El Firebase Admin SDK (scripts Node.js) IGNORA estas reglas — tiene
+// acceso total. Por eso `allow write: if false` en conductores sigue
+// permitiendo que seed.js y set-gestor-claim.js funcionen sin problema.
+//
+// Dos objetos disponibles en cada expresión de regla:
+//   request  → la operación entrante: auth del usuario, datos a escribir, método HTTP.
+//   resource → el documento que ya existe en Firestore (null si es un create).
+//
+// Documentación oficial: https://firebase.google.com/docs/firestore/security/rules-structure
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Funciones auxiliares ───────────────────────────────────────────────────
+    //
+    // Encapsulan condiciones reutilizables para no repetirlas en cada regla.
+    // Son funciones puras: sin efectos secundarios y sin acceso a estado externo
+    // salvo request, resource y las llamadas permitidas (get/exists).
+
+    /** El usuario tiene sesión activa en Firebase Auth. */
+    function autenticado() {
+      return request.auth != null;
+    }
+
+    /**
+     * El usuario tiene el custom claim `gestor: true`.
+     *
+     * Los custom claims viajan dentro del JWT firmado por Firebase Auth.
+     * Solo el Admin SDK puede escribirlos (ver scripts/set-gestor-claim.js),
+     * así que son imposibles de falsificar desde la app cliente, a diferencia
+     * de un campo `rol` en Firestore que cualquiera podría intentar editar.
+     *
+     * Lectura del claim: request.auth.token.gestor
+     * El token se refresca automáticamente; el claim tarda ≤ 1 hora en propagarse
+     * a un token existente. En desarrollo se fuerza con getIdToken(true).
+     */
+    function esGestor() {
+      return autenticado() && request.auth.token.gestor == true;
+    }
+
+    /**
+     * El usuario es el conductor actualmente asignado al vehículo dado.
+     *
+     * `get()` hace una lectura real del documento padre en Firestore.
+     * — Coste: cuenta como una lectura adicional facturada por Firebase.
+     * — Alternativa más barata: comparar el campo `conductorId` del documento
+     *   hijo (resource.data.conductorId), pero eso no funciona en `list` porque
+     *   no hay `resource.data` al evaluar colecciones enteras.
+     * — Usamos get() porque es la opción correcta y segura.
+     *
+     * @param vehiculoId La wildcard del match padre, disponible por herencia de scope.
+     */
+    function esConductorAsignado(vehiculoId) {
+      return autenticado() &&
+        get(/databases/$(database)/documents/vehiculos/$(vehiculoId)).data.conductorId
+          == request.auth.uid;
+    }
+
+    /**
+     * La escritura propuesta solo toca los campos del conjunto `camposPermitidos`.
+     *
+     * `request.resource.data.diff(resource.data).affectedKeys()` devuelve
+     * el conjunto de claves que cambian entre el doc actual y el nuevo.
+     * `hasOnly(set)` falla si hay alguna clave fuera del conjunto declarado.
+     *
+     * Caso concreto: impide que un conductor envíe un update con km=1600 Y
+     * conductorId="otro-uid" en el mismo campo del map, "robando" el vehículo.
+     */
+    function soloModifica(camposPermitidos) {
+      return request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(camposPermitidos);
+    }
+
+
+    // ── /conductores/{uid} ────────────────────────────────────────────────────
+    //
+    // Cada documento tiene como ID el UID de Firebase Auth del conductor.
+    // Unifica autenticación e identidad de dominio en una sola clave.
+
+    match /conductores/{uid} {
+      // Cualquier conductor autenticado puede leer datos de conductores.
+      // El gestor necesita listarlos todos; el conductor necesita ver su propio perfil.
+      allow read: if autenticado();
+
+      // Las escrituras en esta colección solo las hace el Admin SDK:
+      //   - seed.js → crea documentos en el emulador
+      //   - set-gestor-claim.js → no escribe en Firestore (solo en Auth)
+      // El Admin SDK ignora las reglas, así que `if false` solo cierra la puerta
+      // a escrituras desde la app cliente sin afectar los scripts.
+      allow write: if false;
+    }
+
+
+    // ── /vehiculos/{vehiculoId} ───────────────────────────────────────────────
+
+    match /vehiculos/{vehiculoId} {
+      // Cualquier usuario autenticado puede leer vehículos.
+      // El gestor los lista todos; el conductor filtra por conductorId en la query.
+      allow read: if autenticado();
+
+      // Solo el gestor crea o elimina vehículos (operación administrativa).
+      allow create, delete: if esGestor();
+
+      // Las actualizaciones tienen dos fuentes con distintos permisos:
+      //
+      //   1. Gestor reasigna conductor → puede tocar cualquier campo, incluido conductorId.
+      //   2. Conductor actualiza km/horas → solo esos tres campos (soloModifica los acota).
+      //
+      // Si un conductor intenta enviar conductorId junto a km/horas, soloModifica lo rechaza.
+      allow update: if esGestor()
+        || (autenticado()
+              && resource.data.conductorId == request.auth.uid
+              && soloModifica(['km', 'horas', 'ultimaActualizacion']));
+
+
+      // ── /vehiculos/{vehiculoId}/incidencias/{incidenciaId} ────────────────
+      //
+      // Sub-colección dentro de cada vehículo.
+      // La variable `vehiculoId` es accesible aquí porque se hereda del scope del
+      // match padre — así funciona el anidamiento de reglas en Firestore.
+
+      match /incidencias/{incidenciaId} {
+        // El conductor asignado lee sus incidencias; el gestor lee todas.
+        // Esta misma regla cubre las queries collectionGroup("incidencias") del gestor
+        // (getPendientes), porque Firestore evalúa la regla hoja de cada documento
+        // que la query devuelve.
+        allow read: if esGestor() || esConductorAsignado(vehiculoId);
+
+        // Solo el conductor asignado puede crear incidencias sobre su vehículo.
+        // La segunda condición evita que alguien cree una incidencia "firmada" con
+        // el ID de otro conductor: el campo conductorId debe ser su propio UID.
+        allow create: if esConductorAsignado(vehiculoId)
+          && request.resource.data.conductorId == request.auth.uid;
+
+        // Solo el gestor puede marcarRevisada.
+        // soloModifica impide que el gestor altere la descripción u otros snapshots
+        // inmutables (conductorNombre, kmAlReportar...) al mismo tiempo que revisa.
+        allow update: if esGestor()
+          && soloModifica(['revisada', 'fechaRevisada', 'kmAlRevisar']);
+
+        // Las incidencias son un registro de auditoría permanente: nadie puede borrarlas.
+        // Ni siquiera el gestor — si algo se registró, queda para siempre.
+        allow delete: if false;
+      }
+    }
+  }
+}
