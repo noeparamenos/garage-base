@@ -55,9 +55,9 @@ Lista de tareas paso a paso. Marca cada casilla al completarla. Cuando aparezca 
 
 ## 4. Autenticación y roles
 
-- [ ] Pantalla de login
-- [ ] Distinguir sesión `conductor` vs `gestor` al entrar
-- [ ] Enrutar a la vista correspondiente según el rol
+- [x] Pantalla de login
+- [x] Distinguir sesión `conductor` vs `gestor` al entrar
+- [x] Enrutar a la vista correspondiente según el rol
 
 ## 5. Vista del conductor
 
@@ -115,4 +115,5 @@ Warnings heredados del template de Android Studio — no bloquean pero conviene 
 - [x] `docs/adr/0002-persistence-firebase.md`
 - [x] `docs/adr/0003-authentication-phone-auth.md`
 - [x] `docs/firestore-schema.md` — mapa de colecciones y denormalizaciones
+- [x] `docs/screens.md` — mapa de pantallas: flujo de navegación, campos y acciones por pantalla
 - [x] `firestore.rules` versionado en la raíz del repo

@@ -2,6 +2,11 @@
   "firestore": {
     "rules": "firestore.rules"
   },
+  "auth": {
+    "testPhoneNumbers": {
+      "+34600000001": "123456"
+    }
+  },
   "emulators": {
     "auth": {
       "port": 9099
