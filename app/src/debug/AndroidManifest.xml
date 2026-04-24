@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Manifest específico del source set debug.
+
+    Android Gradle Plugin fusiona este archivo con el manifest principal
+    durante la build de debug. En release, este archivo no existe y el atributo
+    networkSecurityConfig no se aplica.
+
+    Esto permite añadir configuración de debug sin tocar el manifest principal.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
+        android:networkSecurityConfig="@xml/network_security_config" />
+</manifest>
