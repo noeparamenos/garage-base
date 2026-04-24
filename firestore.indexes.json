@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "incidencias",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "revisada", "order": "ASCENDING" },
+        { "fieldPath": "fecha",    "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
