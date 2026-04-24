@@ -79,6 +79,19 @@ service cloud.firestore {
     }
 
 
+    // ── collectionGroup /incidencias ─────────────────────────────────────────
+    //
+    // Firestore exige que las queries collectionGroup tengan una regla raíz
+    // con /{path=**}/... independientemente de las reglas anidadas en el
+    // match del padre. Sin esta regla, getPendientes() recibe PERMISSION_DENIED
+    // aunque el gestor tenga acceso a cada documento individual.
+    //
+    // Solo el gestor usa collectionGroup — el conductor siempre va por la ruta
+    // directa /vehiculos/{vehiculoId}/incidencias, cubierta por la regla anidada.
+    match /{path=**}/incidencias/{incidenciaId} {
+      allow read: if esGestor();
+    }
+
     // ── /conductores/{uid} ────────────────────────────────────────────────────
     //
     // Cada documento tiene como ID el UID de Firebase Auth del conductor.
@@ -89,12 +102,12 @@ service cloud.firestore {
       // El gestor necesita listarlos todos; el conductor necesita ver su propio perfil.
       allow read: if autenticado();
 
-      // Las escrituras en esta colección solo las hace el Admin SDK:
-      //   - seed.js → crea documentos en el emulador
-      //   - set-gestor-claim.js → no escribe en Firestore (solo en Auth)
-      // El Admin SDK ignora las reglas, así que `if false` solo cierra la puerta
-      // a escrituras desde la app cliente sin afectar los scripts.
-      allow write: if false;
+      // El gestor crea y edita conductores desde la app (GestorConductoresScreen,
+      // ConductorDetalleScreen). El Admin SDK (seed.js) también puede escribir
+      // porque ignora estas reglas — no hay conflicto.
+      // Nadie borra conductores: son un registro permanente de la flota.
+      allow create, update: if esGestor();
+      allow delete: if false;
     }
 
 
@@ -127,10 +140,10 @@ service cloud.firestore {
       // match padre — así funciona el anidamiento de reglas en Firestore.
 
       match /incidencias/{incidenciaId} {
-        // El conductor asignado lee sus incidencias; el gestor lee todas.
-        // Esta misma regla cubre las queries collectionGroup("incidencias") del gestor
-        // (getPendientes), porque Firestore evalúa la regla hoja de cada documento
-        // que la query devuelve.
+        // El conductor asignado lee las incidencias de su vehículo concreto.
+        // El gestor también puede leer aquí (acceso individual al detalle del vehículo).
+        // La query collectionGroup del gestor requiere la regla raíz de abajo —
+        // esta regla anidada sola no es suficiente para queries entre colecciones.
         allow read: if esGestor() || esConductorAsignado(vehiculoId);
 
         // Solo el conductor asignado puede crear incidencias sobre su vehículo.

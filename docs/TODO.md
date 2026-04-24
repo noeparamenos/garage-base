@@ -59,7 +59,25 @@ Lista de tareas paso a paso. Marca cada casilla al completarla. Cuando aparezca 
 - [x] Distinguir sesión `conductor` vs `gestor` al entrar
 - [x] Enrutar a la vista correspondiente según el rol
 
-## 5. Vista del conductor
+## 5. Vista del gestor
+
+El gestor es el primer usuario que entra en la app: crea vehículos y conductores
+antes de que haya nada que ver para un conductor.
+
+- [x] GestorHome: menú con accesos a Vehículos, Conductores e Incidencias
+- [x] Listado de conductores (nombre | matrícula asignada)
+  - [x] Añadir conductor (nombre, teléfono)
+  - [x] Pantalla de detalle del conductor: editar datos con diálogo de confirmación
+  - [x] Asignar / cambiar / quitar vehículo desde el detalle del conductor (opción "Ninguno")
+- [x] Listado de vehículos (matrícula | conductor asignado)
+  - [x] Añadir vehículo (matrícula)
+  - [x] Detalle del vehículo: km, horas, incidencias pendientes + botón histórico
+  - [x] Asignar / quitar conductor desde el detalle del vehículo
+  - [x] Marcar incidencia como `revisada` con diálogo de confirmación (irreversible)
+- [x] Listado global de incidencias pendientes (matrícula | fecha)
+  - [x] Detalle de incidencia con opción de marcar revisada
+
+## 6. Vista del conductor
 
 - [ ] Mostrar el vehículo asignado al conductor autenticado
 - [ ] Formulario semanal (viernes) para actualizar `km` y `horas`
@@ -67,15 +85,6 @@ Lista de tareas paso a paso. Marca cada casilla al completarla. Cuando aparezca 
   - [ ] Diálogo de confirmación antes de guardar (evitar modificaciones accidentales)
 - [ ] Añadir una nueva `incidencia` a la lista del vehículo
 - [ ] Ver incidencias propias con su estado (`pendiente` / `revisada`)
-
-## 6. Vista del gestor
-
-- [ ] Listado de todos los vehículos con su conductor asignado
-- [ ] Reasignar conductor a un vehículo
-- [ ] Ver detalle del vehículo: `km`, `horas` e incidencias ordenadas por fecha
-- [ ] Listado global de incidencias pendientes de toda la flota, ordenadas por fecha
-- [ ] Marcar una incidencia como `revisada` (el cambio se refleja en la vista del conductor)
-  - [ ] Diálogo de confirmación antes de marcar (acción irreversible)
 
 ## 7. Calidad
 

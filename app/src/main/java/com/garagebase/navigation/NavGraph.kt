@@ -12,7 +12,12 @@ import com.garagebase.features.auth.ui.LoginScreen
 import com.garagebase.features.auth.ui.OtpScreen
 import com.garagebase.features.auth.ui.SplashScreen
 import com.garagebase.features.conductores.ui.ConductorHomeScreen
+import com.garagebase.features.gestor.ui.ConductorDetalleScreen
+import com.garagebase.features.gestor.ui.ConductoresScreen
 import com.garagebase.features.gestor.ui.GestorHomeScreen
+import com.garagebase.features.gestor.ui.IncidenciasGestorScreen
+import com.garagebase.features.gestor.ui.VehiculoDetalleScreen
+import com.garagebase.features.gestor.ui.VehiculosScreen
 
 /**
  * Grafo de navegación principal de la app.
@@ -24,6 +29,11 @@ import com.garagebase.features.gestor.ui.GestorHomeScreen
  * `NavHost` define el destino inicial y registra todos los destinos posibles.
  * La navegación entre ellos es responsabilidad de cada Composable (no del NavGraph),
  * que recibe el [navController] y llama a `navigate()` según el estado del ViewModel.
+ *
+ * Los ViewModels de las pantallas del gestor se crean dentro de cada Composable:
+ * - Su ciclo de vida queda ligado al NavBackStackEntry de la pantalla (se destruyen al salir).
+ * - Los que necesitan el ID del vehículo reciben el SavedStateHandle automáticamente desde
+ *   Navigation, sin necesitar un ViewModelProvider.Factory explícito.
  */
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -57,7 +67,35 @@ fun NavGraph(navController: NavHostController) {
         }
 
         composable(Screen.GestorHome.route) {
-            GestorHomeScreen()
+            GestorHomeScreen(navController = navController)
+        }
+
+        composable(Screen.GestorConductores.route) {
+            ConductoresScreen(navController = navController)
+        }
+
+        // El conductorId se extrae del SavedStateHandle en GestorConductorDetalleViewModel.
+        composable(
+            route = Screen.GestorConductorDetalle.route,
+            arguments = listOf(navArgument("conductorId") { type = NavType.StringType }),
+        ) {
+            ConductorDetalleScreen(navController = navController)
+        }
+
+        composable(Screen.GestorVehiculos.route) {
+            VehiculosScreen(navController = navController)
+        }
+
+        // El vehiculoId se extrae del SavedStateHandle en GestorVehiculoDetalleViewModel.
+        composable(
+            route = Screen.GestorVehiculoDetalle.route,
+            arguments = listOf(navArgument("vehiculoId") { type = NavType.StringType }),
+        ) {
+            VehiculoDetalleScreen(navController = navController)
+        }
+
+        composable(Screen.GestorIncidencias.route) {
+            IncidenciasGestorScreen(navController = navController)
         }
 
         composable(Screen.ConductorHome.route) {

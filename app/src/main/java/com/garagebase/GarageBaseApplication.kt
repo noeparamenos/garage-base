@@ -38,9 +38,14 @@ class GarageBaseApplication : Application() {
      *   auth → 9099 | firestore → 8080
      */
     private fun connectToEmulators() {
-        if (BuildConfig.DEBUG) {
-            Firebase.auth.useEmulator("127.0.0.1", 9099)
-            Firebase.firestore.useEmulator("127.0.0.1", 8080)
-        }
+        // Desactivado: la app apunta a Firebase real para pruebas en dispositivo físico.
+        // Para volver a los emuladores locales:
+        //   1. firebase emulators:start
+        //   2. adb reverse tcp:9099 tcp:9099 && adb reverse tcp:8080 tcp:8080
+        //   3. Descomentar las dos líneas siguientes:
+        // if (BuildConfig.DEBUG) {
+        //     Firebase.auth.useEmulator("127.0.0.1", 9099)
+        //     Firebase.firestore.useEmulator("127.0.0.1", 8080)
+        // }
     }
 }
