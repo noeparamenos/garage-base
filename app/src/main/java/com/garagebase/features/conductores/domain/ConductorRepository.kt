@@ -38,4 +38,26 @@ interface ConductorRepository {
      * @return Flow que emite la lista actualizada cada vez que cambia algún conductor.
      */
     fun getAll(): Flow<List<Conductor>>
+
+    /**
+     * Crea un nuevo conductor con ID generado por Firestore y rol `conductor`.
+     *
+     * El ID resultante NO coincide con el UID de Firebase Auth porque el conductor aún
+     * no ha autenticado. La vinculación Auth↔Firestore se resolverá al primer login
+     * buscando el documento por [telefono] — fuera del alcance de esta sección.
+     *
+     * @param nombre Nombre completo del conductor.
+     * @param telefono Teléfono en formato E.164 (+34...).
+     * @return ID del documento creado.
+     */
+    suspend fun add(nombre: String, telefono: String): String
+
+    /**
+     * Actualiza el nombre y teléfono de un conductor existente.
+     *
+     * @param id ID del documento del conductor en Firestore.
+     * @param nombre Nuevo nombre.
+     * @param telefono Nuevo teléfono.
+     */
+    suspend fun update(id: String, nombre: String, telefono: String)
 }

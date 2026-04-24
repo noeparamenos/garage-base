@@ -49,4 +49,24 @@ interface VehiculoRepository {
      * @param conductorNombre Nombre del nuevo conductor (denormalizado en el documento del vehículo).
      */
     suspend fun asignarConductor(vehiculoId: String, conductorId: String, conductorNombre: String)
+
+    /**
+     * Añade un nuevo vehículo a la flota con km y horas a cero y sin conductor asignado.
+     * El conductor se asigna después con [asignarConductor].
+     *
+     * @param matricula Matrícula del vehículo (p.ej. "1234 ABC").
+     */
+    suspend fun add(matricula: String)
+
+    /**
+     * Quita el conductor asignado a un vehículo, dejando los campos `conductorId`
+     * y `conductorNombre` a null en Firestore.
+     *
+     * No requiere WriteBatch porque solo modifica un documento: el vehículo queda libre
+     * y el conductor ya no tiene referencia al vehículo (la relación es unidireccional
+     * desde el documento del vehículo).
+     *
+     * @param vehiculoId ID del vehículo del que se quita el conductor.
+     */
+    suspend fun quitarConductor(vehiculoId: String)
 }

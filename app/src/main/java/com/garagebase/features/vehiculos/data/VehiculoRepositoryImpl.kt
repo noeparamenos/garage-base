@@ -80,19 +80,58 @@ class VehiculoRepositoryImpl : VehiculoRepository {
     }
 
     /**
-     * Asigna un conductor a un vehículo actualizando los campos denormalizados.
+     * Asigna un conductor a un vehículo con un `WriteBatch` atómico.
      *
-     * Actualiza `conductorId` y `conductorNombre` en el mismo documento.
-     * - En Firestore, una llamada a `update()` con múltiples campos es atómica (como transacción).
-     * - Garantiza que nunca quede el documento en un estado inconsistente (ID de un conductor pero el nombre del anterior).
+     * El conductor solo puede estar asignado a un vehículo a la vez. Si ya tenía uno
+     * asignado, esta operación lo libera antes de asignarle el nuevo:
+     * 1. Busca el vehículo anterior de ese conductor (query a Firestore).
+     * 2. Si existe y es distinto al destino, lo limpia en el batch.
+     * 3. Asigna el conductor al vehículo destino en el mismo batch.
+     * 4. Hace `commit()` → ambas escrituras llegan a Firestore a la vez o ninguna lo hace.
      *
-     * @param vehiculoId ID del vehículo a reasignar.
-     * @param conductorId ID del nuevo conductor.
-     * @param conductorNombre Nombre del nuevo conductor (denormalizado).
+     * **WriteBatch vs transacción**: el batch garantiza atomicidad de escritura pero no
+     * lee datos en medio del proceso — es suficiente aquí porque la invariante "un conductor,
+     * un vehículo" se mantiene con la búsqueda previa.
+     *
+     * @param vehiculoId ID del vehículo destino.
+     * @param conductorId ID del conductor que se asigna.
+     * @param conductorNombre Nombre del conductor (denormalizado en el documento del vehículo).
      */
     override suspend fun asignarConductor(vehiculoId: String, conductorId: String, conductorNombre: String) {
+        // Buscamos si el conductor ya tiene un vehículo asignado distinto al destino.
+        val anterior = col.whereEqualTo("conductorId", conductorId).get().await()
+            .documents.firstOrNull { it.id != vehiculoId }
+
+        val batch = Firebase.firestore.batch()
+
+        if (anterior != null) {
+            // Limpiamos los campos denormalizados del vehículo anterior.
+            batch.update(anterior.reference, "conductorId", null, "conductorNombre", null)
+        }
+
+        batch.update(col.document(vehiculoId), "conductorId", conductorId, "conductorNombre", conductorNombre)
+        batch.commit().await()
+    }
+
+    /**
+     * Crea un vehículo nuevo con km y horas a cero y sin conductor asignado.
+     *
+     * Los campos `conductorId` y `conductorNombre` se omiten intencionalmente
+     * para que Firestore los trate como `null` — el DTO tiene valores por defecto nullable.
+     */
+    override suspend fun add(matricula: String) {
+        col.add(mapOf("matricula" to matricula, "km" to 0L, "horas" to 0.0)).await()
+    }
+
+    /**
+     * Quita el conductor de un vehículo poniendo `conductorId` y `conductorNombre` a null.
+     *
+     * Un solo documento → no hace falta WriteBatch. La relación conductor↔vehículo vive
+     * exclusivamente en el documento del vehículo, así que basta con limpiar sus campos.
+     */
+    override suspend fun quitarConductor(vehiculoId: String) {
         col.document(vehiculoId)
-            .update("conductorId", conductorId, "conductorNombre", conductorNombre)
+            .update("conductorId", null, "conductorNombre", null)
             .await()
     }
 }

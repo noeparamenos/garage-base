@@ -27,4 +27,8 @@ class AuthRepositoryImpl : AuthRepository {
         val result = auth.currentUser?.getIdToken(false)?.await() ?: return false
         return result.claims["gestor"] as? Boolean ?: false
     }
+
+    override fun signOut() {
+        auth.signOut()
+    }
 }

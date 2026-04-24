@@ -44,3 +44,13 @@ Registro de errores e incidencias encontradas durante el desarrollo. Cada entrad
    - **Solución**: crear `app/src/debug/res/xml/network_security_config.xml` con una excepción de cleartext para `127.0.0.1` y `10.0.2.2`, y referenciarla desde `app/src/debug/AndroidManifest.xml`. Al usar el source set `debug`, la excepción nunca llega a la build de release.
    - **Lección**: nunca añadir `android:usesCleartextTrafficPermitted="true"` en el manifest principal — afectaría a producción. La solución correcta es siempre un `network_security_config` acotado al entorno de desarrollo.
 
+8. **Problema**: la app crashea con `Failed to connect to /127.0.0.1:9099` al probar en un dispositivo físico con la configuración del emulador activa.
+   - **Causa**: `GarageBaseApplication` llama a `Firebase.auth.useEmulator("127.0.0.1", 9099)` en builds debug. En un móvil físico `127.0.0.1` apunta al propio teléfono, no al ordenador donde corren los emuladores. Sin el túnel `adb reverse`, la conexión falla y la excepción no está capturada, matando el proceso.
+   - **Solución para dispositivo físico**: comentar la llamada al emulador y apuntar al Firebase real. Para volver a los emuladores: `firebase emulators:start` + `adb reverse tcp:9099 tcp:9099 && adb reverse tcp:8080 tcp:8080`.
+   - **Diferencia con el error 7**: el 7 era Android bloqueando HTTP; este es la red no alcanzando el puerto. Pueden coincidir en el mismo escenario pero son errores distintos.
+
+9. **Problema**: la app crashea con `INVALID_REFRESH_TOKEN` al cambiar del emulador a Firebase real.
+   - **Causa**: el dispositivo tenía guardado un token de sesión del emulador local. Al apuntar la app a Firebase real, `getIdToken()` intenta refrescarlo contra los servidores de Google, que lo rechazan por ser un token de emulador. La excepción no estaba capturada en `checkSession()` del `AuthViewModel`, lo que mataba el proceso.
+   - **Solución**: envolver `authRepository.isGestor()` en `runCatching` dentro de `checkSession()`. En el bloque `onFailure` se llama a `authRepository.signOut()` para borrar las credenciales inválidas y se emite `AuthUiState.Unauthenticated`, enviando al usuario al login sin crash.
+   - **Lección**: cualquier operación de red en el arranque de la app (especialmente `getIdToken`) puede fallar. Siempre capturar la excepción y degradar con gracia en lugar de dejar que el proceso muera.
+

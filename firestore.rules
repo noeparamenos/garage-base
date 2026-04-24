@@ -89,12 +89,12 @@ service cloud.firestore {
       // El gestor necesita listarlos todos; el conductor necesita ver su propio perfil.
       allow read: if autenticado();
 
-      // Las escrituras en esta colección solo las hace el Admin SDK:
-      //   - seed.js → crea documentos en el emulador
-      //   - set-gestor-claim.js → no escribe en Firestore (solo en Auth)
-      // El Admin SDK ignora las reglas, así que `if false` solo cierra la puerta
-      // a escrituras desde la app cliente sin afectar los scripts.
-      allow write: if false;
+      // El gestor crea y edita conductores desde la app (GestorConductoresScreen,
+      // ConductorDetalleScreen). El Admin SDK (seed.js) también puede escribir
+      // porque ignora estas reglas — no hay conflicto.
+      // Nadie borra conductores: son un registro permanente de la flota.
+      allow create, update: if esGestor();
+      allow delete: if false;
     }
 
 

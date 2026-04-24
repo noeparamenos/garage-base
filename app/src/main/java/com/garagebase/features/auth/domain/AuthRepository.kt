@@ -21,4 +21,13 @@ interface AuthRepository {
      * - El claim ya debe estar presente desde el login — si no, devuelve false.
      */
     suspend fun isGestor(): Boolean
+
+    /**
+     * Cierra la sesión actual borrando las credenciales almacenadas localmente.
+     *
+     * Se usa cuando el token guardado es inválido (p.ej. al cambiar entre el
+     * emulador local y Firebase real) para evitar que la app quede atascada
+     * en un estado de sesión corrupta.
+     */
+    fun signOut()
 }

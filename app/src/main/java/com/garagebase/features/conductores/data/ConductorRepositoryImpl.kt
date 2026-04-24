@@ -7,6 +7,7 @@ import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 
 /**
  * Implementación de [ConductorRepository] usando Cloud Firestore.
@@ -60,5 +61,27 @@ class ConductorRepositoryImpl : ConductorRepository {
             } ?: emptyList())
         }
         awaitClose { listener.remove() }
+    }
+
+    /**
+     * Crea un documento nuevo en `/conductores` con ID generado por Firestore.
+     *
+     * Se usa `col.add()` (no `col.document(id).set()`) para dejar que Firestore
+     * asigne el ID — el UID de Firebase Auth aún no existe en este punto.
+     *
+     * @return ID del documento recién creado.
+     */
+    override suspend fun add(nombre: String, telefono: String): String =
+        col.add(mapOf("nombre" to nombre, "telefono" to telefono, "rol" to "conductor"))
+            .await()
+            .id
+
+    /**
+     * Actualiza nombre y teléfono de un conductor sin tocar el campo `rol`.
+     *
+     * `update()` solo modifica los campos indicados; el resto del documento queda intacto.
+     */
+    override suspend fun update(id: String, nombre: String, telefono: String) {
+        col.document(id).update("nombre", nombre, "telefono", telefono).await()
     }
 }

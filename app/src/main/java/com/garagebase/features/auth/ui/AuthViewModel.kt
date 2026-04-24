@@ -87,13 +87,31 @@ class AuthViewModel : ViewModel() {
      * Si hay sesión → lee el claim gestor → emite [AuthUiState.Authenticated].
      * Si no → emite [AuthUiState.Unauthenticated].
      */
+    /**
+     * Comprueba si hay sesión activa al arrancar la app (SplashScreen).
+     *
+     * Si hay sesión → lee el claim gestor → emite [AuthUiState.Authenticated].
+     * Si no → emite [AuthUiState.Unauthenticated].
+     *
+     * El [runCatching] protege la llamada a [isGestor]: si el token almacenado es
+     * inválido (p.ej. al cambiar entre emulador y Firebase real), `getIdToken()` lanza
+     * una excepción. En ese caso cerramos la sesión corrupta y mandamos al usuario
+     * al login en lugar de dejar que el proceso muera.
+     */
     fun checkSession() {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Checking
             if (authRepository.currentUserId() == null) {
                 _uiState.value = AuthUiState.Unauthenticated
             } else {
-                _uiState.value = AuthUiState.Authenticated(authRepository.isGestor())
+                runCatching { authRepository.isGestor() }
+                    .onSuccess { isGestor ->
+                        _uiState.value = AuthUiState.Authenticated(isGestor)
+                    }
+                    .onFailure {
+                        authRepository.signOut()
+                        _uiState.value = AuthUiState.Unauthenticated
+                    }
             }
         }
     }

@@ -51,6 +51,11 @@ google-services.json
 # Firebase
 firebase-debug.log
 .firebase/
+# Service account key — acceso total al proyecto, nunca commitear
+scripts/serviceAccountKey.json
+# Logs de depuración de emuladores
+scripts/firebase-debug.log
+scripts/firestore-debug.log
 
 # OS
 .DS_Store
