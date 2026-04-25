@@ -64,18 +64,23 @@ Registro de errores e incidencias encontradas durante el desarrollo. Cada entrad
     - **Solución**: crear `firestore.indexes.json` en la raíz del proyecto con el índice `{ collectionGroup: "incidencias", queryScope: "COLLECTION_GROUP", fields: [revisada ASC, fecha ASC] }`, referenciar el archivo en `firebase.json`, y desplegar con `firebase deploy --only firestore` (no `--only firestore:rules`, que omite los índices).
     - **Lección**: `--only firestore` despliega reglas e índices juntos; `--only firestore:rules` solo despliega las reglas. Los índices de `collectionGroup` tardan 1-2 minutos en construirse tras el despliegue.
 
-13. **Problema**: `PERMISSION_DENIED` en `vincularPorTelefono` al intentar borrar el doc temporal del conductor.
-    - **Causa**: el batch de `vincularPorTelefono` incluía un `delete` del documento pre-creado por el gestor (ID = teléfono), pero la regla de Firestore era `allow delete: if false`, bloqueando cualquier borrado desde el cliente.
-    - **Solución**: añadir regla selectiva en `/conductores/{uid}`: `allow delete: if autenticado() && uid == request.auth.token.phone_number`. Permite borrar únicamente el documento cuyo ID es el propio número de teléfono del conductor autenticado (el doc temporal), dejando intacto cualquier otro documento.
-    - **Seguridad**: el `phone_number` viaja dentro del JWT firmado por Firebase Auth, por lo que no es falsificable desde la app cliente.
-
-14. **Problema**: el doc temporal (ID = teléfono) no se eliminaba en logins posteriores al primero, dejando dos instancias del conductor en Firestore.
-    - **Causa**: en `vincularPorTelefono` existe un guard de idempotencia: si el doc con UID ya existe, entra en una rama de recuperación. Esa rama solo borraba el phone doc si encontraba un vehículo con `conductorId = teléfono`. Si no había vehículo o ya apuntaba al UID (porque el primer login había fallado a mitad y dejado el doc UID sin borrar el phone doc), la rama devolvía sin limpiar nada.
-    - **Solución**: en el guard, consultar siempre si el phone doc existe (`col.document(telefono).get().await()`) e incluirlo en el batch de limpieza de forma independiente al estado del vehículo. Así, cualquier login posterior al primero (sea recuperación de fallo parcial o no) deja Firestore con un único documento por conductor.
-    - **Lección**: los guards de idempotencia deben cubrir todos los campos de estado que pueden quedar sucios tras un fallo parcial, no solo el estado más obvio.
-
 12. **Problema**: primer login del conductor devuelve "Perfil de conductor no encontrado" aunque el gestor lo había dado de alta.
     - **Causa**: el gestor crea el documento del conductor con `col.add()`, que genera un ID auto-aleatorio de Firestore. Al hacer login, el ViewModel busca el documento por el UID de Firebase Auth (`findById(uid)`), pero esas dos claves no coinciden nunca — el UID lo asigna Firebase Auth al autenticar, no Firestore al crear el documento.
     - **Solución**: añadir `vincularPorTelefono(uid, telefono)` a `ConductorRepository`. Al arrancar `ConductorHomeViewModel`, antes de abrir los Flows en tiempo real, se ejecuta este método: busca el documento pre-creado por el gestor cuyo campo `telefono` coincida con el número autenticado, y lo migra al UID real con un `WriteBatch` atómico (crea el doc con el UID como ID, actualiza `conductorId` del vehículo si había asignación, y borra el documento antiguo). En siguientes logins el documento ya existe con el UID correcto y el método hace no-op.
     - **Lección**: cuando el ciclo de vida de la identidad (quién crea el registro) y el ciclo de vida de la autenticación (quién se autentica por primera vez) no coinciden en el tiempo, hay que añadir un paso de vinculación explícita. Firestore no hace auto-joins entre documentos y UIDs de Auth.
+
+13. **Problema**: `PERMISSION_DENIED` en `vincularPorTelefono` al intentar borrar el doc temporal del conductor.
+    - **Causa**: el batch de `vincularPorTelefono` incluía un `delete` del documento pre-creado por el gestor (ID = teléfono), pero la regla de Firestore era `allow delete: if false`, bloqueando cualquier borrado desde el cliente.
+    - **Solución**: añadir regla selectiva en `/conductores/{uid}`: `allow delete: if autenticado() && uid == request.auth.token.phone_number`. Permite borrar únicamente el documento cuyo ID es el propio número de teléfono del conductor autenticado (el doc temporal), dejando intacto cualquier otro documento.
+    - **Lección**: el `phone_number` viaja dentro del JWT firmado por Firebase Auth y no es falsificable desde la app cliente, lo que permite usarlo como condición de seguridad en reglas.
+
+14. **Problema**: el doc temporal (ID = teléfono) no se eliminaba en logins posteriores al primero, dejando dos instancias del conductor en Firestore.
+    - **Causa**: el guard de idempotencia en `vincularPorTelefono` (`if (uidDoc.exists())`) solo borraba el phone doc si encontraba un vehículo con `conductorId = teléfono`. Si no había vehículo asignado o ya apuntaba al UID (primer login había fallado parcialmente), la rama devolvía sin limpiar nada.
+    - **Solución**: en el guard, consultar siempre si el phone doc existe (`col.document(telefono).get().await()`) e incluirlo en el batch de limpieza de forma independiente al estado del vehículo.
+    - **Lección**: los guards de idempotencia deben cubrir todos los campos de estado que pueden quedar sucios tras un fallo parcial, no solo el estado más obvio.
+
+15. **Problema**: la autenticación por SMS no enviaba el OTP al número real del conductor; el flujo quedaba bloqueado en el paso de verificación.
+    - **Causa**: Firebase Phone Auth usa Play Integrity API (anteriormente SafetyNet) para verificar que la solicitud proviene de una app legítima y así enviar el OTP de forma silenciosa. Sin la huella SHA-256 del certificado de firma registrada en Firebase Console, la verificación falla y Firebase no puede completar el flujo.
+    - **Solución**: ejecutar `./gradlew signingReport`, copiar el valor SHA-256 del variant `debug` y añadirlo en Firebase Console → Project settings → tu app Android → Añadir huella digital. No requiere cambios de código.
+    - **Lección**: el SHA-1 (necesario para registrar la app en Firebase) y el SHA-256 (necesario para Play Integrity / phone auth en dispositivo físico) son dos huellas distintas con propósitos distintos. Ambas deben estar registradas para que la autenticación telefónica funcione en producción.
 

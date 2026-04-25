@@ -35,10 +35,10 @@ Lista de tareas paso a paso. Marca cada casilla al completarla. Cuando aparezca 
 
 ### 3.5 SMS reales (de números de prueba a OTP real)
 
-- [ ] Registrar SHA-256 de debug en Firebase Console (Project settings → tu app → Añadir huella digital) — necesario para Play Integrity y verificación OTP silenciosa sin reCAPTCHA
-- [ ] Probar el flujo completo con un número de teléfono real (OTP recibido por SMS, sin números de prueba)
-- [ ] Verificar que `vincularPorTelefono` funciona con el número real: único doc `/conductores/{uid}` en Firestore tras el primer login
-- [ ] Confirmar que el gestor puede añadir conductores con su número real y que reciben el SMS al hacer login
+- [x] Registrar SHA-256 de debug en Firebase Console (Project settings → tu app → Añadir huella digital) — necesario para Play Integrity y verificación OTP silenciosa sin reCAPTCHA
+- [x] Probar el flujo completo con un número de teléfono real (OTP recibido por SMS, sin números de prueba)
+- [x] Verificar que `vincularPorTelefono` funciona con el número real: único doc `/conductores/{uid}` en Firestore tras el primer login
+- [x] Confirmar que el gestor puede añadir conductores con su número real y que reciben el SMS al hacer login
 
 ### 3.2 Wiring en el proyecto Android
 
