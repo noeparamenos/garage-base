@@ -33,6 +33,13 @@ Lista de tareas paso a paso. Marca cada casilla al completarla. Cuando aparezca 
 - [ ] (Diferido — requiere plan Blaze) Configurar alerta de presupuesto en Google Cloud
 - [ ] (Diferido) Activar Firebase App Check — protección extra contra uso fraudulento de la API; configurar cuando se prepare la release
 
+### 3.5 SMS reales (de números de prueba a OTP real)
+
+- [ ] Registrar SHA-256 de debug en Firebase Console (Project settings → tu app → Añadir huella digital) — necesario para Play Integrity y verificación OTP silenciosa sin reCAPTCHA
+- [ ] Probar el flujo completo con un número de teléfono real (OTP recibido por SMS, sin números de prueba)
+- [ ] Verificar que `vincularPorTelefono` funciona con el número real: único doc `/conductores/{uid}` en Firestore tras el primer login
+- [ ] Confirmar que el gestor puede añadir conductores con su número real y que reciben el SMS al hacer login
+
 ### 3.2 Wiring en el proyecto Android
 
 - [x] Añadir plugin `com.google.gms.google-services` en el `build.gradle.kts` raíz y aplicarlo en `:app`
@@ -79,12 +86,11 @@ antes de que haya nada que ver para un conductor.
 
 ## 6. Vista del conductor
 
-- [ ] Mostrar el vehículo asignado al conductor autenticado
-- [ ] Formulario semanal (viernes) para actualizar `km` y `horas`
-  - [ ] Validar que los nuevos valores sean ≥ a los actuales antes de enviar
-  - [ ] Diálogo de confirmación antes de guardar (evitar modificaciones accidentales)
-- [ ] Añadir una nueva `incidencia` a la lista del vehículo
-- [ ] Ver incidencias propias con su estado (`pendiente` / `revisada`)
+- [x] Mostrar el vehículo asignado al conductor autenticado
+- [x] Formulario para actualizar `km` y `horas` (diálogo con validación)
+  - [x] Validar que los nuevos valores sean ≥ a los actuales antes de enviar
+- [x] Añadir una nueva `incidencia` a la lista del vehículo
+- [x] Ver incidencias propias con su estado (`pendiente` / `revisada`)
 
 ## 7. Calidad
 

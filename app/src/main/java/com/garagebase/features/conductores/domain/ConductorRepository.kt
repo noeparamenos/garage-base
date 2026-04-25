@@ -60,4 +60,24 @@ interface ConductorRepository {
      * @param telefono Nuevo teléfono.
      */
     suspend fun update(id: String, nombre: String, telefono: String)
+
+    /**
+     * Vincula el documento pre-creado por el gestor con el UID real de Firebase Auth.
+     *
+     * El gestor crea conductores con ID auto-generado por Firestore, porque el conductor
+     * aún no ha autenticado. Al primer login, este método:
+     * 1. Busca el documento con ese [telefono] en la colección `conductores`.
+     * 2. Si el ID ya es [uid], no hace nada (ya vinculado).
+     * 3. Si el ID es distinto, ejecuta un WriteBatch atómico:
+     *    - Crea el documento `/conductores/{uid}` con los mismos datos.
+     *    - Si había un vehículo asignado al ID anterior, actualiza su `conductorId` a [uid].
+     *    - Elimina el documento con el ID antiguo.
+     *
+     * Si no se encuentra ningún conductor con ese teléfono, no hace nada (el gestor
+     * aún no ha dado de alta al conductor — la pantalla mostrará el mensaje informativo).
+     *
+     * @param uid UID de Firebase Auth del conductor recién autenticado.
+     * @param telefono Número de teléfono en formato E.164, obtenido de [FirebaseAuth.currentUser].
+     */
+    suspend fun vincularPorTelefono(uid: String, telefono: String)
 }
