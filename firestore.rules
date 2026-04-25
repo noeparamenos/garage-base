@@ -105,9 +105,24 @@ service cloud.firestore {
       // El gestor crea y edita conductores desde la app (GestorConductoresScreen,
       // ConductorDetalleScreen). El Admin SDK (seed.js) también puede escribir
       // porque ignora estas reglas — no hay conflicto.
-      // Nadie borra conductores: son un registro permanente de la flota.
-      allow create, update: if esGestor();
-      allow delete: if false;
+      allow update: if esGestor();
+
+      // El gestor crea conductores normalmente.
+      // Caso especial: el propio conductor crea su doc con UID en el PRIMER LOGIN.
+      // Tres condiciones para evitar auto-registro no autorizado:
+      //   1. uid == request.auth.uid         → solo puede crear su propio doc
+      //   2. telefono == phone_number del JWT → el campo teléfono debe ser su número real
+      //   3. exists(/conductores/{telefono}) → el gestor lo debe haber dado de alta primero
+      allow create: if esGestor()
+        || (autenticado()
+              && uid == request.auth.uid
+              && request.resource.data.telefono == request.auth.token.phone_number
+              && exists(/databases/$(database)/documents/conductores/$(request.auth.token.phone_number)));
+
+      // Un conductor solo puede borrar el doc cuyo ID es su propio número de teléfono
+      // (el doc temporal pre-creado por el gestor). Ningún otro doc es borrable.
+      // Este permiso lo usa vincularPorTelefono() internamente — no hay acción en la UI.
+      allow delete: if autenticado() && uid == request.auth.token.phone_number;
     }
 
 
@@ -121,16 +136,27 @@ service cloud.firestore {
       // Solo el gestor crea o elimina vehículos (operación administrativa).
       allow create, delete: if esGestor();
 
-      // Las actualizaciones tienen dos fuentes con distintos permisos:
+      // Las actualizaciones tienen tres fuentes con distintos permisos:
       //
       //   1. Gestor reasigna conductor → puede tocar cualquier campo, incluido conductorId.
       //   2. Conductor actualiza km/horas → solo esos tres campos (soloModifica los acota).
+      //   3. Conductor vincula su vehículo en el primer login (vincularPorTelefono):
+      //      el gestor asignó el vehículo usando el ID auto-generado del conductor;
+      //      al hacer login el conductor actualiza conductorId al UID real de Auth.
+      //      Seguridad: solo puede poner su propio UID, y solo si el doc antiguo del
+      //      conductor (con el ID auto-generado) tiene el mismo teléfono que su doc nuevo.
+      //      Así no puede "robar" el vehículo de otro conductor.
       //
       // Si un conductor intenta enviar conductorId junto a km/horas, soloModifica lo rechaza.
       allow update: if esGestor()
         || (autenticado()
               && resource.data.conductorId == request.auth.uid
-              && soloModifica(['km', 'horas', 'ultimaActualizacion']));
+              && soloModifica(['km', 'horas', 'ultimaActualizacion']))
+        || (autenticado()
+              && soloModifica(['conductorId'])
+              && request.resource.data.conductorId == request.auth.uid
+              && get(/databases/$(database)/documents/conductores/$(resource.data.conductorId)).data.telefono
+                 == get(/databases/$(database)/documents/conductores/$(request.auth.uid)).data.telefono);
 
 
       // ── /vehiculos/{vehiculoId}/incidencias/{incidenciaId} ────────────────
