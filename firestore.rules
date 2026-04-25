@@ -30,19 +30,20 @@ service cloud.firestore {
     }
 
     /**
-     * El usuario tiene el custom claim `gestor: true`.
+     * El usuario tiene rol "gestor" según su documento en Firestore.
      *
-     * Los custom claims viajan dentro del JWT firmado por Firebase Auth.
-     * Solo el Admin SDK puede escribirlos (ver scripts/set-gestor-claim.js),
-     * así que son imposibles de falsificar desde la app cliente, a diferencia
-     * de un campo `rol` en Firestore que cualquiera podría intentar editar.
+     * Se lee el campo `rol` del documento `/conductores/{uid}` del usuario actual.
+     * Ventaja frente a custom claims: el rol es visible y editable desde la consola
+     * de Firebase sin necesidad del Admin SDK.
      *
-     * Lectura del claim: request.auth.token.gestor
-     * El token se refresca automáticamente; el claim tarda ≤ 1 hora en propagarse
-     * a un token existente. En desarrollo se fuerza con getIdToken(true).
+     * Seguridad: un conductor no puede auto-asignarse "gestor" porque la regla
+     * `allow update` de /conductores solo permite escrituras si ya eres gestor.
+     * Si el documento no existe, get() devuelve null y la regla falla sin error.
      */
     function esGestor() {
-      return autenticado() && request.auth.token.gestor == true;
+      return autenticado() &&
+        exists(/databases/$(database)/documents/conductores/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/conductores/$(request.auth.uid)).data.rol == "gestor";
     }
 
     /**
@@ -117,6 +118,7 @@ service cloud.firestore {
         || (autenticado()
               && uid == request.auth.uid
               && request.resource.data.telefono == request.auth.token.phone_number
+              && request.resource.data.rol != "gestor"
               && exists(/databases/$(database)/documents/conductores/$(request.auth.token.phone_number)));
 
       // Un conductor solo puede borrar el doc cuyo ID es su propio número de teléfono

@@ -2,10 +2,12 @@ package com.garagebase.features.gestor.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -55,6 +57,18 @@ fun GestorHomeScreen(navController: NavHostController) {
                 titulo = "Incidencias pendientes",
                 subtitulo = "Revisar y marcar incidencias de toda la flota"
             ) { navController.navigate(Screen.GestorIncidencias.route) }
+
+            // Empuja "Mi vehículo" al fondo de la pantalla
+            Spacer(Modifier.weight(1f))
+
+            SeccionCard(
+                titulo = "Mi vehículo",
+                subtitulo = "Ver y actualizar el vehículo asignado a tu propia cuenta",
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            ) { navController.navigate(Screen.ConductorHome.route) }
         }
     }
 }
@@ -64,22 +78,28 @@ fun GestorHomeScreen(navController: NavHostController) {
  *
  * @param titulo Nombre de la sección.
  * @param subtitulo Descripción breve de lo que se puede hacer.
+ * @param colors Colores de la tarjeta; por defecto los colores estándar de Card.
  * @param onClick Acción al pulsar la tarjeta.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SeccionCard(titulo: String, subtitulo: String, onClick: () -> Unit) {
+private fun SeccionCard(
+    titulo: String,
+    subtitulo: String,
+    colors: CardColors = CardDefaults.cardColors(),
+    onClick: () -> Unit
+) {
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = colors
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Text(text = titulo, style = MaterialTheme.typography.titleLarge)
             Text(
                 text = subtitulo,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp)
             )
         }

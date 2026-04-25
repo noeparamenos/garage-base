@@ -296,7 +296,7 @@ private fun IncidenciaItem(incidencia: Incidencia, onMarcarRevisada: () -> Unit)
         },
         trailingContent = {
             if (!incidencia.revisada) {
-                Button(onClick = onMarcarRevisada) { Text("Revisar") }
+                Button(onClick = onMarcarRevisada) { Text("Reparar") }
             } else {
                 Text(
                     "Revisada",
@@ -321,7 +321,7 @@ private fun ConfirmacionRevisadaDialog(
 ) {
     AlertDialog(
         onDismissRequest = onCancelar,
-        title = { Text("Marcar como revisada") },
+        title = { Text("Marcar como reparada") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("\"${incidencia.descripcion}\"")

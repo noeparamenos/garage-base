@@ -13,6 +13,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -41,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.garagebase.core.model.Incidencia
 import com.garagebase.core.model.Vehiculo
 import com.garagebase.ui.theme.GarageBaseTheme
@@ -54,19 +57,33 @@ import java.time.format.DateTimeFormatter
  * Posee el [viewModel] y recoge los StateFlows con `collectAsState()`.
  * Delega toda la UI a [ConductorHomeContent], que solo recibe datos y lambdas
  * — esto permite crear Previews sin emulador ni Firebase.
+ *
+ * @param navController Controlador de navegación. Si hay una entrada anterior en el backstack
+ *   (por ejemplo, el gestor llegó aquí desde GestorHome), se muestra un botón de volver.
+ *   Para un conductor que aterrizó aquí tras el login no habrá entrada anterior y no aparece.
  */
 @Composable
-fun ConductorHomeScreen(viewModel: ConductorHomeViewModel = viewModel()) {
+fun ConductorHomeScreen(
+    navController: NavHostController? = null,
+    viewModel: ConductorHomeViewModel = viewModel()
+) {
     val uiState by viewModel.uiState.collectAsState()
     val dialogoActualizar by viewModel.dialogoActualizar.collectAsState()
     val dialogoIncidencia by viewModel.dialogoIncidencia.collectAsState()
     val errorDialogo by viewModel.errorDialogo.collectAsState()
+
+    // previousBackStackEntry != null solo cuando hay una pantalla a la que volver
+    // (gestor navegando desde GestorHome). Los conductores llegan aquí como destino raíz.
+    val onBack: (() -> Unit)? = navController
+        ?.takeIf { it.previousBackStackEntry != null }
+        ?.let { nc -> { nc.popBackStack() } }
 
     ConductorHomeContent(
         uiState = uiState,
         dialogoActualizar = dialogoActualizar,
         dialogoIncidencia = dialogoIncidencia,
         errorDialogo = errorDialogo,
+        onBack = onBack,
         onAbrirActualizar = viewModel::abrirDialogoActualizar,
         onCerrarActualizar = viewModel::cerrarDialogoActualizar,
         onConfirmarActualizar = viewModel::actualizarKmYHoras,
@@ -97,6 +114,7 @@ private fun ConductorHomeContent(
     dialogoActualizar: Boolean,
     dialogoIncidencia: Boolean,
     errorDialogo: String?,
+    onBack: (() -> Unit)? = null,
     onAbrirActualizar: () -> Unit,
     onCerrarActualizar: () -> Unit,
     onConfirmarActualizar: (km: String, horas: String) -> Unit,
@@ -106,7 +124,16 @@ private fun ConductorHomeContent(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Mi vehículo") })
+            TopAppBar(
+                title = { Text("Mi vehículo") },
+                navigationIcon = {
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        }
+                    }
+                }
+            )
         },
         // FAB para añadir incidencia — solo visible cuando hay vehículo asignado
         floatingActionButton = {

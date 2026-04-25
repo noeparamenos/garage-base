@@ -83,6 +83,7 @@ antes de que haya nada que ver para un conductor.
   - [x] Marcar incidencia como `revisada` con diálogo de confirmación (irreversible)
 - [x] Listado global de incidencias pendientes (matrícula | fecha)
   - [x] Detalle de incidencia con opción de marcar revisada
+- [x] Botón "Mi vehículo" en GestorHome: el gestor accede a la vista del conductor para su propio vehículo asignado
 
 ## 6. Vista del conductor
 

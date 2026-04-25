@@ -99,7 +99,7 @@ fun NavGraph(navController: NavHostController) {
         }
 
         composable(Screen.ConductorHome.route) {
-            ConductorHomeScreen()
+            ConductorHomeScreen(navController = navController)
         }
     }
 }
