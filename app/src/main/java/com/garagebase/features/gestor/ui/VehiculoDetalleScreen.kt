@@ -26,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -154,25 +155,40 @@ private fun VehiculoDetalleContent(
                         )
                     }
                     item {
-                        Row(
+                        Card(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            elevation = CardDefaults.cardElevation(2.dp)
                         ) {
-                            Text("Incidencias", style = MaterialTheme.typography.titleMedium)
-                            TextButton(onClick = onToggleHistorico) {
-                                Text(if (mostrarHistorico) "Solo pendientes" else "Ver histórico")
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("Incidencias", style = MaterialTheme.typography.titleMedium)
+                                FilterChip(
+                                    selected = mostrarHistorico,
+                                    onClick = onToggleHistorico,
+                                    label = { Text("Histórico") }
+                                )
                             }
                         }
                     }
 
                     if (incidencias.isEmpty()) {
                         item {
-                            Text(
-                                if (mostrarHistorico) "Sin incidencias registradas."
-                                else "Sin incidencias pendientes.",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                elevation = CardDefaults.cardElevation(2.dp)
+                            ) {
+                                Text(
+                                    text = if (mostrarHistorico) "Sin incidencias registradas."
+                                           else "Sin incidencias pendientes.",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            }
                         }
                     } else {
                         items(incidencias, key = { it.id }) { inc ->

@@ -1,6 +1,7 @@
 package com.garagebase.features.auth.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -79,60 +82,70 @@ internal fun OtpScreenContent(
     var code by remember { mutableStateOf("") }
     val cargando = uiState is AuthUiState.VerifyingCode
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .padding(24.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        Text("Código de verificación", style = MaterialTheme.typography.headlineSmall)
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Introduce el código de 6 dígitos que hemos enviado por SMS.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        OutlinedTextField(
-            value = code,
-            onValueChange = { if (it.length <= 6) code = it },
-            label = { Text("Código") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-            singleLine = true,
+        Card(
             modifier = Modifier.fillMaxWidth(),
-            enabled = !cargando,
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = { onVerificar(code) },
-            enabled = code.length == 6 && !cargando,
-            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         ) {
-            if (cargando) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                )
-            } else {
-                Text("Verificar")
-            }
-        }
+            Column(
+                modifier = Modifier.padding(32.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text("Código de verificación", style = MaterialTheme.typography.headlineSmall)
 
-        if (uiState is AuthUiState.Error) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = uiState.message,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium,
-            )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Introduce el código de 6 dígitos que hemos enviado por SMS.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                OutlinedTextField(
+                    value = code,
+                    onValueChange = { if (it.length <= 6) code = it },
+                    label = { Text("Código") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !cargando,
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = { onVerificar(code) },
+                    enabled = code.length == 6 && !cargando,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    if (cargando) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                        )
+                    } else {
+                        Text("Verificar")
+                    }
+                }
+
+                if (uiState is AuthUiState.Error) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = uiState.message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
         }
     }
 }

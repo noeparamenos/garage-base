@@ -2,6 +2,7 @@ package com.garagebase.features.auth.ui
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -90,63 +93,73 @@ internal fun LoginScreenContent(
     var phoneNumber by remember { mutableStateOf("+34") }
     val cargando = uiState is AuthUiState.SendingCode
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .padding(24.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        Text(text = "GarageBase", style = MaterialTheme.typography.headlineLarge)
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = "Gestión de flota",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        Spacer(modifier = Modifier.height(48.dp))
-
-        OutlinedTextField(
-            value = phoneNumber,
-            onValueChange = { phoneNumber = it },
-            label = { Text("Número de teléfono") },
-            placeholder = { Text("612 345 678") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            singleLine = true,
+        Card(
             modifier = Modifier.fillMaxWidth(),
-            enabled = !cargando,
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = { onEnviarCodigo(phoneNumber.trim()) },
-            enabled = phoneNumber.isNotBlank() && !cargando,
-            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         ) {
-            if (cargando) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                )
-            } else {
-                Text("Enviar código")
-            }
-        }
+            Column(
+                modifier = Modifier.padding(32.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(text = "GarageBase", style = MaterialTheme.typography.headlineLarge)
 
-        if (uiState is AuthUiState.Error) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = uiState.message,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            TextButton(onClick = onReintentar) {
-                Text("Reintentar")
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Gestión de flota",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                Spacer(modifier = Modifier.height(48.dp))
+
+                OutlinedTextField(
+                    value = phoneNumber,
+                    onValueChange = { phoneNumber = it },
+                    label = { Text("Número de teléfono") },
+                    placeholder = { Text("612 345 678") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !cargando,
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = { onEnviarCodigo(phoneNumber.trim()) },
+                    enabled = phoneNumber.isNotBlank() && !cargando,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    if (cargando) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                        )
+                    } else {
+                        Text("Enviar código")
+                    }
+                }
+
+                if (uiState is AuthUiState.Error) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = uiState.message,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    TextButton(onClick = onReintentar) {
+                        Text("Reintentar")
+                    }
+                }
             }
         }
     }

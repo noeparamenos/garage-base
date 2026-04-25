@@ -44,6 +44,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.ui.graphics.Color
 import com.garagebase.core.model.Incidencia
 import com.garagebase.core.model.Vehiculo
 import com.garagebase.ui.theme.GarageBaseTheme
@@ -294,6 +296,11 @@ private fun VehiculoCard(vehiculo: Vehiculo, onActualizarClick: () -> Unit) {
 @Composable
 private fun IncidenciaItem(incidencia: Incidencia) {
     val fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy").withZone(ZoneId.systemDefault())
+    val colorFondo = if (incidencia.revisada)
+        Color(0xFFA5D6A7)   // verde pastel suave
+    else
+        Color(0xFFEF9A9A)   // rojo pastel suave
+
     ListItem(
         headlineContent = { Text(incidencia.descripcion) },
         supportingContent = {
@@ -301,19 +308,17 @@ private fun IncidenciaItem(incidencia: Incidencia) {
         },
         trailingContent = {
             if (incidencia.revisada) {
-                Text(
-                    "Revisada",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Text("Revisada", style = MaterialTheme.typography.labelSmall, color = Color.Black)
             } else {
-                Text(
-                    "Pendiente",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text("Pendiente", style = MaterialTheme.typography.labelSmall, color = Color.Black)
             }
-        }
+        },
+        colors = ListItemDefaults.colors(
+            containerColor = colorFondo,
+            headlineColor = Color.Black,
+            supportingColor = Color.Black,
+            trailingIconColor = Color.Black
+        )
     )
 }
 
