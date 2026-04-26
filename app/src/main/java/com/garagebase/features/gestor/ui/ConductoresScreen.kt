@@ -236,9 +236,7 @@ private fun FormularioConductorDialog(
             )?.use { cursor ->
                 if (cursor.moveToFirst()) {
                     onNombreChange(cursor.getString(0))
-                    onTelefonoChange(
-                        cursor.getString(1).replace(" ", "").replace("-", "")
-                    )
+                    onTelefonoChange(normalizarTelefono(cursor.getString(1)))
                 }
             }
         }
@@ -322,6 +320,30 @@ private fun ConfirmacionDialog(
             TextButton(onClick = onCancelar, enabled = !guardando) { Text("Corregir") }
         }
     )
+}
+
+// ── Utilidades ───────────────────────────────────────────────────────────────
+
+/**
+ * Normaliza un número de teléfono al formato E.164 con prefijo +34.
+ *
+ * Casos que maneja:
+ *   "+34 612 345 678"  → "+34612345678"  (espacios)
+ *   "0034612345678"    → "+34612345678"  (prefijo 00)
+ *   "34612345678"      → "+34612345678"  (prefijo sin +)
+ *   "612345678"        → "+34612345678"  (número local de 9 dígitos)
+ *   "+44 7700 900123"  → "+447700900123" (número extranjero: se limpia pero no se toca el prefijo)
+ */
+private fun normalizarTelefono(raw: String): String {
+    val soloDigitos = raw.filter { it.isDigit() }
+    val conSigno = if (raw.contains('+')) "+$soloDigitos" else soloDigitos
+    return when {
+        conSigno.startsWith("+34")                        -> conSigno
+        conSigno.startsWith("0034")                       -> "+34${conSigno.drop(4)}"
+        conSigno.startsWith("34") && conSigno.length >= 11 -> "+$conSigno"
+        soloDigitos.length == 9                           -> "+34$soloDigitos"
+        else                                              -> conSigno
+    }
 }
 
 // ── Previews ─────────────────────────────────────────────────────────────────
