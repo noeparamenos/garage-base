@@ -73,6 +73,11 @@ class PhoneAuthService {
                 ) {
                     // Flujo normal: pasamos el verificationId. El Flow queda abierto
                     // hasta que awaitClose lo cierre al cancelar el colector.
+                    //
+                    // `trySend` en lugar de `send`: estamos en un callback no-suspendible,
+                    // así que no podemos usar `suspend fun send()`. `trySend` es síncrono y
+                    // devuelve un resultado (éxito/fallo) sin bloquear. En un callbackFlow
+                    // con buffer por defecto (64 elementos) prácticamente nunca falla.
                     trySend(PhoneAuthEvent.CodeSent(verificationId))
                 }
             }

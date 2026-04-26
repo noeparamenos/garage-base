@@ -15,10 +15,11 @@ interface AuthRepository {
     fun currentUserId(): String?
 
     /**
-     * Comprueba si el usuario autenticado tiene el custom claim `gestor: true`.
+     * Comprueba si el usuario autenticado tiene rol de gestor.
      *
-     * - Lee el token JWT cacheado sin forzar un refresco de red (parámetro `false`).
-     * - El claim ya debe estar presente desde el login — si no, devuelve false.
+     * Suspendible porque puede implicar una llamada de red (la implementación decide
+     * si lee un token cacheado, un documento en Firestore, etc.).
+     * Devuelve false si no hay sesión activa.
      */
     suspend fun isGestor(): Boolean
 
