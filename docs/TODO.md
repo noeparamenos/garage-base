@@ -111,14 +111,26 @@ Warnings heredados del template de Android Studio — no bloquean pero conviene 
 
 ## 8. Distribución
 
+### 8.1 Firebase App Distribution (beta con testers — requisito previo a Google Play)
+
+- [ ] Añadir plugin `com.google.firebase.appdistribution` en `build.gradle.kts`
+- [ ] Configurar bloque `firebaseAppDistribution` en el `buildType debug` de `app/build.gradle.kts`
+- [ ] Subir primera APK de debug a App Distribution (`./gradlew appDistributionUploadDebug`)
+- [ ] Invitar a los 20 testers por email desde la consola de Firebase
+- [ ] Que los 20 testers instalen la app (enlace directo, sin App Tester) y la usen 14 días consecutivos → requisito de Google Play cumplido
+
+### 8.2 Google Play (producción)
+
 - [ ] Crear keystore de release y guardarla fuera del repositorio
 - [ ] Registrar el SHA-1 de release en Firebase Console (Authentication → Configuración del proyecto → tu app Android → Añadir huella digital)
 - [ ] Configurar firma de release en `app/build.gradle.kts` (bloque `signingConfigs`)
-- [ ] Generar APK firmado y distribuirlo a conductores
+- [ ] Generar APK/AAB firmado
+- [ ] Publicar en Google Play (requiere 8.1 completado)
 
 ## 9. Pendientes / mejoras futuras
 
 - [ ] (Diferido) Aviso/notificación del gestor a conductores seleccionados — **no implementar hasta que se pida explícitamente**
+- [ ] (Diferido — antes de Google Play) Multi-tenancy: migrar estructura Firestore a `/flotas/{flotaId}/conductores` y `/flotas/{flotaId}/vehiculos`. Solo afecta a la capa `data/` (repositorios + Security Rules); ViewModels y pantallas no cambian.
 
 ## Artefactos del proyecto
 
