@@ -1,19 +1,29 @@
 package com.garagebase.features.gestor.ui
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.provider.ContactsContract
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -23,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -33,6 +44,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -191,7 +203,9 @@ private fun ConductoresContent(
  * Formulario de alta de conductor: nombre y teléfono.
  *
  * Solo se usa para crear conductores nuevos — la edición se hace desde [ConductorDetalleScreen].
- * El botón "Siguiente" pasa al paso de confirmación sin persistir todavía en Firestore.
+ * El botón "Buscar en agenda" lanza el selector de contactos del sistema con ACTION_PICK
+ * sobre Phone.CONTENT_URI, lo que otorga acceso temporal sin pedir READ_CONTACTS.
+ * El número se limpia de espacios y guiones para ajustarse al formato +34XXXXXXXXX.
  */
 @Composable
 private fun FormularioConductorDialog(
@@ -201,12 +215,49 @@ private fun FormularioConductorDialog(
     onCancelar: () -> Unit,
     onSiguiente: () -> Unit
 ) {
+    val context = LocalContext.current
+
+    val seleccionarContacto = rememberLauncherForActivityResult(
+        contract = object : ActivityResultContract<Unit, Uri?>() {
+            override fun createIntent(context: Context, input: Unit) =
+                Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI)
+            override fun parseResult(resultCode: Int, intent: Intent?): Uri? =
+                if (resultCode == Activity.RESULT_OK) intent?.data else null
+        }
+    ) { uri ->
+        uri?.let { phoneUri ->
+            context.contentResolver.query(
+                phoneUri,
+                arrayOf(
+                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                    ContactsContract.CommonDataKinds.Phone.NUMBER
+                ),
+                null, null, null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    onNombreChange(cursor.getString(0))
+                    onTelefonoChange(
+                        cursor.getString(1).replace(" ", "").replace("-", "")
+                    )
+                }
+            }
+        }
+    }
+
     val camposValidos = dialogo.nombre.isNotBlank() && dialogo.telefono.isNotBlank()
     AlertDialog(
         onDismissRequest = onCancelar,
         title = { Text("Nuevo conductor") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedButton(
+                    onClick = { seleccionarContacto.launch(Unit) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Person, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Buscar en agenda")
+                }
                 OutlinedTextField(
                     value = dialogo.nombre,
                     onValueChange = onNombreChange,
