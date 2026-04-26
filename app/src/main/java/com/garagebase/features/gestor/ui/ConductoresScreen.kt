@@ -325,24 +325,25 @@ private fun ConfirmacionDialog(
 // ── Utilidades ───────────────────────────────────────────────────────────────
 
 /**
- * Normaliza un número de teléfono al formato E.164 con prefijo +34.
+ * Normaliza un número de teléfono al formato E.164.
  *
  * Casos que maneja:
- *   "+34 612 345 678"  → "+34612345678"  (espacios)
- *   "0034612345678"    → "+34612345678"  (prefijo 00)
- *   "34612345678"      → "+34612345678"  (prefijo sin +)
- *   "612345678"        → "+34612345678"  (número local de 9 dígitos)
- *   "+44 7700 900123"  → "+447700900123" (número extranjero: se limpia pero no se toca el prefijo)
+ *   "+34 612 345 678"  → "+34612345678"  (cualquier + ya es E.164, solo limpiar)
+ *   "+44 7700 900123"  → "+447700900123" (ídem, extranjero)
+ *   "0034612345678"    → "+34612345678"  (00 internacional español)
+ *   "0044 7700 900123" → "+447700900123" (00 internacional extranjero)
+ *   "34612345678"      → "+34612345678"  (prefijo 34 sin +)
+ *   "612345678"        → "+34612345678"  (número local español de 9 dígitos)
  */
 private fun normalizarTelefono(raw: String): String {
     val soloDigitos = raw.filter { it.isDigit() }
     val conSigno = if (raw.contains('+')) "+$soloDigitos" else soloDigitos
     return when {
-        conSigno.startsWith("+34")                        -> conSigno
-        conSigno.startsWith("0034")                       -> "+34${conSigno.drop(4)}"
-        conSigno.startsWith("34") && conSigno.length >= 11 -> "+$conSigno"
-        soloDigitos.length == 9                           -> "+34$soloDigitos"
-        else                                              -> conSigno
+        conSigno.startsWith("+")                           -> conSigno          // ya E.164
+        conSigno.startsWith("00")                          -> "+${conSigno.drop(2)}"  // 00XX → +XX
+        conSigno.startsWith("34") && conSigno.length >= 11 -> "+$conSigno"     // 34 sin +
+        soloDigitos.length == 9                            -> "+34$soloDigitos" // local español
+        else                                               -> conSigno
     }
 }
 
