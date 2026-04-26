@@ -52,6 +52,18 @@ data class DialogoEditarConductorState(
 )
 
 /**
+ * Estado del diálogo de confirmación de borrado.
+ *
+ * @property borrando true mientras la operación de borrado en Firestore está en vuelo.
+ *   Bloquea el botón de confirmar para evitar dobles envíos.
+ * @property error Mensaje de error si el borrado falló (ej: permisos de Firestore denegados).
+ */
+data class DialogoBorrarConductorState(
+    val borrando: Boolean = false,
+    val error: String? = null
+)
+
+/**
  * ViewModel del detalle de un conductor para el gestor.
  *
  * Gestiona dos acciones independientes:
@@ -80,6 +92,17 @@ class GestorConductorDetalleViewModel(
     /** Controla la visibilidad del diálogo de selección de vehículo. */
     private val _dialogoAsignar = MutableStateFlow(false)
     val dialogoAsignar: StateFlow<Boolean> = _dialogoAsignar.asStateFlow()
+
+    /** Estado del diálogo de borrado; null = diálogo cerrado. */
+    private val _dialogoBorrar = MutableStateFlow<DialogoBorrarConductorState?>(null)
+    val dialogoBorrar: StateFlow<DialogoBorrarConductorState?> = _dialogoBorrar.asStateFlow()
+
+    /**
+     * true después de que el borrado se completa con éxito.
+     * La pantalla observa este valor para llamar a popBackStack() una sola vez.
+     */
+    private val _navegarAtras = MutableStateFlow(false)
+    val navegarAtras: StateFlow<Boolean> = _navegarAtras.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -136,6 +159,43 @@ class GestorConductorDetalleViewModel(
 
     fun abrirDialogoAsignar() { _dialogoAsignar.value = true }
     fun cerrarDialogoAsignar() { _dialogoAsignar.value = false }
+
+    /**
+     * Abre el diálogo de confirmación de borrado.
+     * Cierra primero el diálogo de edición para que no se solapen.
+     */
+    fun abrirDialogoBorrar() {
+        _dialogoEditar.value = null
+        _dialogoBorrar.value = DialogoBorrarConductorState()
+    }
+
+    fun cerrarDialogoBorrar() { _dialogoBorrar.value = null }
+
+    /**
+     * Borra el conductor de Firestore.
+     *
+     * El orden importa: primero se intenta borrar el conductor (operación que puede fallar
+     * por permisos). Solo si eso tiene éxito se libera el vehículo asignado, evitando
+     * que el vehículo quede desasignado cuando el conductor sigue existiendo.
+     */
+    fun borrar() {
+        val ok = _uiState.value as? ConductorDetalleUiState.Ok ?: return
+        _dialogoBorrar.value = DialogoBorrarConductorState(borrando = true)
+        viewModelScope.launch {
+            runCatching {
+                conductorRepo.delete(conductorId)
+                // Solo llega aquí si delete tuvo éxito.
+                ok.vehiculoAsignado?.let { vehiculoRepo.quitarConductor(it.id) }
+            }.onSuccess {
+                _navegarAtras.value = true
+            }.onFailure { e ->
+                _dialogoBorrar.value = DialogoBorrarConductorState(
+                    borrando = false,
+                    error = e.message ?: "Error al eliminar el conductor"
+                )
+            }
+        }
+    }
 
     /**
      * Asigna o quita el vehículo del conductor.

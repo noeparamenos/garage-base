@@ -121,10 +121,12 @@ service cloud.firestore {
               && request.resource.data.rol != "gestor"
               && exists(/databases/$(database)/documents/conductores/$(request.auth.token.phone_number)));
 
-      // Un conductor solo puede borrar el doc cuyo ID es su propio número de teléfono
-      // (el doc temporal pre-creado por el gestor). Ningún otro doc es borrable.
-      // Este permiso lo usa vincularPorTelefono() internamente — no hay acción en la UI.
-      allow delete: if autenticado() && uid == request.auth.token.phone_number;
+      // Dos casos permitidos:
+      //   1. El gestor elimina cualquier conductor desde ConductorDetalleScreen.
+      //   2. Un conductor borra su doc temporal (ID = teléfono) durante vincularPorTelefono().
+      //      El doc temporal nunca tiene UID real como ID, así que esGestor() no lo cubre.
+      allow delete: if esGestor()
+        || (autenticado() && uid == request.auth.token.phone_number);
     }
 
 

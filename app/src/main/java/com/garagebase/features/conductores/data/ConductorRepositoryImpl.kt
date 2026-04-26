@@ -95,6 +95,11 @@ class ConductorRepositoryImpl : ConductorRepository {
         col.document(id).update("nombre", nombre, "telefono", telefono).await()
     }
 
+    /** Borra el documento del conductor. Las Security Rules deben permitir `delete` al gestor. */
+    override suspend fun delete(id: String) {
+        col.document(id).delete().await()
+    }
+
     /**
      * Vincula el documento pre-creado por el gestor con el UID real de Firebase Auth.
      *

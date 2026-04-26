@@ -13,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,11 +70,19 @@ fun ConductorDetalleScreen(
     val uiState by viewModel.uiState.collectAsState()
     val dialogoEditar by viewModel.dialogoEditar.collectAsState()
     val dialogoAsignar by viewModel.dialogoAsignar.collectAsState()
+    val dialogoBorrar by viewModel.dialogoBorrar.collectAsState()
+    val navegarAtras by viewModel.navegarAtras.collectAsState()
+
+    // Navega atrás una sola vez cuando el borrado se completa.
+    LaunchedEffect(navegarAtras) {
+        if (navegarAtras) navController.popBackStack()
+    }
 
     ConductorDetalleContent(
         uiState = uiState,
         dialogoEditar = dialogoEditar,
         dialogoAsignar = dialogoAsignar,
+        dialogoBorrar = dialogoBorrar,
         onBack = { navController.popBackStack() },
         onAbrirEditar = viewModel::abrirDialogoEditar,
         onCerrarEditar = viewModel::cerrarDialogoEditar,
@@ -83,7 +93,10 @@ fun ConductorDetalleScreen(
         onGuardar = viewModel::guardar,
         onAbrirAsignar = viewModel::abrirDialogoAsignar,
         onCerrarAsignar = viewModel::cerrarDialogoAsignar,
-        onSeleccionarVehiculo = viewModel::seleccionarVehiculo
+        onSeleccionarVehiculo = viewModel::seleccionarVehiculo,
+        onAbrirBorrar = viewModel::abrirDialogoBorrar,
+        onCerrarBorrar = viewModel::cerrarDialogoBorrar,
+        onBorrar = viewModel::borrar
     )
 }
 
@@ -93,6 +106,7 @@ private fun ConductorDetalleContent(
     uiState: ConductorDetalleUiState,
     dialogoEditar: DialogoEditarConductorState?,
     dialogoAsignar: Boolean,
+    dialogoBorrar: DialogoBorrarConductorState?,
     onBack: () -> Unit,
     onAbrirEditar: () -> Unit,
     onCerrarEditar: () -> Unit,
@@ -103,7 +117,10 @@ private fun ConductorDetalleContent(
     onGuardar: () -> Unit,
     onAbrirAsignar: () -> Unit,
     onCerrarAsignar: () -> Unit,
-    onSeleccionarVehiculo: (String?) -> Unit
+    onSeleccionarVehiculo: (String?) -> Unit,
+    onAbrirBorrar: () -> Unit,
+    onCerrarBorrar: () -> Unit,
+    onBorrar: () -> Unit
 ) {
     val titulo = (uiState as? ConductorDetalleUiState.Ok)?.conductor?.nombre ?: "Conductor"
 
@@ -170,9 +187,21 @@ private fun ConductorDetalleContent(
                 onNombreChange = onNombreChange,
                 onTelefonoChange = onTelefonoChange,
                 onCancelar = onCerrarEditar,
-                onSiguiente = onPedirConfirmacion
+                onSiguiente = onPedirConfirmacion,
+                onBorrar = onAbrirBorrar
             )
         }
+    }
+
+    // Diálogo de confirmación de borrado
+    if (dialogoBorrar != null && uiState is ConductorDetalleUiState.Ok) {
+        ConfirmacionBorrarDialog(
+            nombre = uiState.conductor.nombre,
+            borrando = dialogoBorrar.borrando,
+            error = dialogoBorrar.error,
+            onConfirmar = onBorrar,
+            onCancelar = onCerrarBorrar
+        )
     }
 
     // Diálogo de selección de vehículo
@@ -204,7 +233,7 @@ private fun DatosConductorCard(conductor: Conductor, onEditarClick: () -> Unit) 
         Row(
             modifier = Modifier.padding(16.dp).fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text("Datos del conductor", style = MaterialTheme.typography.titleMedium)
@@ -260,6 +289,8 @@ private fun VehiculoAsignadoCard(vehiculoAsignado: Vehiculo?, onAsignarClick: ()
  *
  * El botón "Siguiente" no guarda directamente — pasa al paso de confirmación
  * para que el gestor pueda detectar errores tipográficos antes de persistirlos.
+ *
+ * El botón "Eliminar conductor" cierra este diálogo y abre el de confirmación de borrado.
  */
 @Composable
 private fun EditarConductorDialog(
@@ -267,7 +298,8 @@ private fun EditarConductorDialog(
     onNombreChange: (String) -> Unit,
     onTelefonoChange: (String) -> Unit,
     onCancelar: () -> Unit,
-    onSiguiente: () -> Unit
+    onSiguiente: () -> Unit,
+    onBorrar: () -> Unit
 ) {
     val camposValidos = dialogo.nombre.isNotBlank() && dialogo.telefono.isNotBlank()
     AlertDialog(
@@ -290,6 +322,14 @@ private fun EditarConductorDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     modifier = Modifier.fillMaxWidth()
                 )
+                HorizontalDivider(modifier = Modifier.padding(top = 4.dp))
+                TextButton(
+                    onClick = onBorrar,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) { Text("Eliminar conductor") }
             }
         },
         confirmButton = {
@@ -333,6 +373,54 @@ private fun ConfirmacionEdicionDialog(
         },
         dismissButton = {
             TextButton(onClick = onCancelar, enabled = !guardando) { Text("Corregir") }
+        }
+    )
+}
+
+/**
+ * Diálogo de confirmación antes de eliminar al conductor.
+ *
+ * Muestra el nombre para que el gestor pueda verificar que no se ha equivocado.
+ * Mientras [borrando] es true se bloquean ambos botones y aparece un spinner.
+ * Si el conductor tiene vehículo asignado, el ViewModel lo libera antes de borrar.
+ */
+@Composable
+private fun ConfirmacionBorrarDialog(
+    nombre: String,
+    borrando: Boolean,
+    error: String?,
+    onConfirmar: () -> Unit,
+    onCancelar: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = { if (!borrando) onCancelar() },
+        title = { Text("Eliminar conductor") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("¿Seguro que quieres eliminar a $nombre? Esta acción no se puede deshacer.")
+                if (error != null) {
+                    Text(
+                        text = error,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (borrando) CircularProgressIndicator(modifier = Modifier.padding(end = 8.dp))
+                TextButton(
+                    onClick = onConfirmar,
+                    enabled = !borrando,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) { Text("Eliminar") }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onCancelar, enabled = !borrando) { Text("Cancelar") }
         }
     )
 }
@@ -433,11 +521,12 @@ private fun ConductorDetalleConVehiculoPreview() {
                 vehiculoAsignado = vehiculosPreview[0],
                 todosVehiculos = vehiculosPreview
             ),
-            dialogoEditar = null, dialogoAsignar = false,
+            dialogoEditar = null, dialogoAsignar = false, dialogoBorrar = null,
             onBack = {}, onAbrirEditar = {}, onCerrarEditar = {},
             onNombreChange = {}, onTelefonoChange = {}, onPedirConfirmacion = {},
             onCancelarConfirmacion = {}, onGuardar = {},
-            onAbrirAsignar = {}, onCerrarAsignar = {}, onSeleccionarVehiculo = {}
+            onAbrirAsignar = {}, onCerrarAsignar = {}, onSeleccionarVehiculo = {},
+            onAbrirBorrar = {}, onCerrarBorrar = {}, onBorrar = {}
         )
     }
 }
@@ -452,11 +541,12 @@ private fun ConductorDetalleSinVehiculoPreview() {
                 vehiculoAsignado = null,
                 todosVehiculos = vehiculosPreview
             ),
-            dialogoEditar = null, dialogoAsignar = false,
+            dialogoEditar = null, dialogoAsignar = false, dialogoBorrar = null,
             onBack = {}, onAbrirEditar = {}, onCerrarEditar = {},
             onNombreChange = {}, onTelefonoChange = {}, onPedirConfirmacion = {},
             onCancelarConfirmacion = {}, onGuardar = {},
-            onAbrirAsignar = {}, onCerrarAsignar = {}, onSeleccionarVehiculo = {}
+            onAbrirAsignar = {}, onCerrarAsignar = {}, onSeleccionarVehiculo = {},
+            onAbrirBorrar = {}, onCerrarBorrar = {}, onBorrar = {}
         )
     }
 }

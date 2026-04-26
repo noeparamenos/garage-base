@@ -62,6 +62,17 @@ interface ConductorRepository {
     suspend fun update(id: String, nombre: String, telefono: String)
 
     /**
+     * Elimina el documento del conductor de Firestore.
+     *
+     * El gestor debe liberar el vehículo asignado antes o después de llamar a este método.
+     * La lógica de desasignación vive en el ViewModel para que pueda coordinar
+     * ambas escrituras sin acoplar el repositorio a otro repositorio.
+     *
+     * @param id ID del documento del conductor en Firestore.
+     */
+    suspend fun delete(id: String)
+
+    /**
      * Vincula el documento pre-creado por el gestor con el UID real de Firebase Auth.
      *
      * El gestor crea conductores con ID auto-generado por Firestore, porque el conductor
