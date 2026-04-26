@@ -130,7 +130,50 @@ Warnings heredados del template de Android Studio — no bloquean pero conviene 
 ## 9. Pendientes / mejoras futuras
 
 - [ ] (Diferido) Aviso/notificación del gestor a conductores seleccionados — **no implementar hasta que se pida explícitamente**
-- [ ] (Diferido — antes de Google Play) Multi-tenancy: migrar estructura Firestore a `/flotas/{flotaId}/conductores` y `/flotas/{flotaId}/vehiculos`. Solo afecta a la capa `data/` (repositorios + Security Rules); ViewModels y pantallas no cambian.
+
+## 10. Multi-tenancy — cualquier persona puede crear su propia flota
+
+Permite que cualquier usuario descargue la app, cree su flota y gestione sus conductores sin intervención manual en Firebase Console. Prerequisito para Google Play.
+
+### 10.1 Migración de datos — nueva estructura Firestore
+
+- [ ] Crear colección raíz `/flotas/{flotaId}` con campos: `nombre`, `gestorId`, `codigoInvitacion`, `creadaEn`
+- [ ] Mover `/conductores` → `/flotas/{flotaId}/conductores`
+- [ ] Mover `/vehiculos` → `/flotas/{flotaId}/vehiculos` (con su subcolección `/incidencias`)
+- [ ] Escribir script de migración para mover los datos actuales a la nueva estructura
+- [ ] Actualizar `firestore.indexes.json` si hay índices afectados
+
+### 10.2 Capa de datos — repositorios
+
+- [ ] Crear `FlotaRepository` + `FlotaRepositoryImpl`: `crear(nombre)`, `findById()`, `generarCodigo()`
+- [ ] Actualizar `ConductorRepositoryImpl`: todas las rutas pasan a `/flotas/{flotaId}/conductores/...`
+- [ ] Actualizar `VehiculoRepositoryImpl`: todas las rutas pasan a `/flotas/{flotaId}/vehiculos/...`
+- [ ] Actualizar `IncidenciaRepositoryImpl` (subcolección sigue igual pero bajo la nueva ruta de vehiculos)
+- [ ] Propagar `flotaId` desde el login al resto de repositorios (inyección en el ViewModel o singleton de sesión)
+
+### 10.3 Seguridad — Security Rules
+
+- [ ] Regla de aislamiento por flota: un usuario solo puede leer/escribir datos de su propia flota
+- [ ] Regla de creación de flota: cualquier usuario autenticado puede crear una flota (se convierte en gestor)
+- [ ] Regla de unión por código: un conductor puede unirse si el código que presenta existe en el documento de la flota
+- [ ] Eliminar acceso global a `/conductores` y `/vehiculos` (rutas antiguas)
+
+### 10.4 Autenticación — nuevo flujo de onboarding
+
+- [ ] Detectar si es el primer login del usuario (no pertenece a ninguna flota)
+- [ ] Pantalla de onboarding con dos opciones: "Crear mi flota" y "Unirme con código"
+- [ ] Flujo "Crear flota": formulario con nombre de flota → crea `/flotas/{flotaId}` → usuario queda como gestor
+- [ ] Flujo "Unirme con código": campo de 6 dígitos → valida contra Firestore → crea conductor en la flota correspondiente
+- [ ] Eliminar el rol gestor manual vía Admin SDK (`set-gestor-claim.js`) — ya no es necesario
+- [ ] Actualizar `vincularPorTelefono` para que opere dentro de `/flotas/{flotaId}/conductores`
+
+### 10.5 UI — pantallas nuevas y ajustes
+
+- [ ] Pantalla de onboarding (primera vez): "Crear flota" / "Tengo un código"
+- [ ] Pantalla "Crear flota": campo nombre + botón crear
+- [ ] Pantalla "Unirme a una flota": campo código de 6 dígitos
+- [ ] GestorHome: botón para ver y compartir el código de invitación de su flota
+- [ ] Ajustar `SplashScreen` para detectar si el usuario ya pertenece a una flota y enrutar correctamente
 
 ## Artefactos del proyecto
 
