@@ -28,7 +28,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -160,6 +167,34 @@ internal fun LoginScreenContent(
                         Text("Reintentar")
                     }
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Aviso legal: visible antes de entrar, sin interrumpir el flujo.
+                // Las URLs apuntan a GitHub Pages — publicar los documentos antes del lanzamiento.
+                val avisoLegal = buildAnnotatedString {
+                    append("Al continuar aceptas los ")
+                    withLink(LinkAnnotation.Url("https://noeparamenos.github.io/garage-base/terminos")) {
+                        withStyle(SpanStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            textDecoration = TextDecoration.Underline
+                        )) { append("Términos de uso") }
+                    }
+                    append(" y la ")
+                    withLink(LinkAnnotation.Url("https://noeparamenos.github.io/garage-base/privacidad")) {
+                        withStyle(SpanStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            textDecoration = TextDecoration.Underline
+                        )) { append("Política de privacidad") }
+                    }
+                }
+                Text(
+                    text = avisoLegal,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }

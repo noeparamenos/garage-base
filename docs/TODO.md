@@ -128,11 +128,17 @@ Warnings heredados del template de Android Studio — no bloquean pero conviene 
 - [ ] Generar APK/AAB firmado
 - [ ] Publicar en Google Play (requiere 8.1 completado)
 
-## 9. Pendientes / mejoras futuras
+## 9. Términos de uso y política de privacidad
+
+- [ ] Redactar documento legal (Términos de uso + Política de privacidad) y publicarlo en GitHub Pages
+- [x] Añadir enlace a los términos en la pantalla de login (texto pequeño al pie, sin interrumpir el flujo)
+- [ ] Añadir enlace a los términos en la ficha de Google Play (obligatorio para publicar)
+
+## 10. Pendientes / mejoras futuras
 
 - [ ] (Diferido) Aviso/notificación del gestor a conductores seleccionados — **no implementar hasta que se pida explícitamente**
 
-## 10. Multi-tenancy — cualquier persona puede crear su propia flota
+## 11. Multi-tenancy — cualquier persona puede crear su propia flota
 
 Permite que cualquier usuario descargue la app, cree su flota y gestione sus conductores sin intervención manual en Firebase Console. Prerequisito para Google Play.
 
