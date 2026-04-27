@@ -113,11 +113,12 @@ Warnings heredados del template de Android Studio — no bloquean pero conviene 
 
 ### 8.1 Firebase App Distribution (beta con testers — requisito previo a Google Play)
 
-- [ ] Añadir plugin `com.google.firebase.appdistribution` en `build.gradle.kts`
-- [ ] Configurar bloque `firebaseAppDistribution` en el `buildType debug` de `app/build.gradle.kts`
-- [ ] Subir primera APK de debug a App Distribution (`./gradlew appDistributionUploadDebug`)
-- [ ] Invitar a los 20 testers por email desde la consola de Firebase
-- [ ] Que los 20 testers instalen la app (enlace directo, sin App Tester) y la usen 14 días consecutivos → requisito de Google Play cumplido
+- [x] Configurar distribución vía Firebase CLI con `scripts/distribute.sh` (el plugin Gradle es incompatible con AGP 9.x)
+- [x] Subir primera APK de debug a App Distribution
+- [x] Añadir testers desde la consola de Firebase (2 de 20 activos)
+- [x] Testers instalando la app correctamente mediante enlace directo (sin App Tester)
+- [ ] Llegar a 20 testers activos
+- [ ] Que los 20 testers usen la app durante 14 días consecutivos → requisito de Google Play cumplido
 
 ### 8.2 Google Play (producción)
 
